@@ -1,0 +1,105 @@
+[h1]自动出牌 / 狂吼耳环[/h1]
+[i]模组版本 0.1.0-beta · 作者 kewu · 适用游戏版本 0.113.1 · 单人 / 联机[/i]
+
+[h2]这是什么[/h2]
+一个先古（Ancient）遗物。拿到它以后，每个回合的开始都会多给你能量，然后[b]瓦库接管你的回合[/b]，替你把能打的牌一张张打出去。牌组和路线还是你自己选，回合归瓦库。
+
+[h2]怎么拿到[/h2]
+[list]
+[*][b]开局直接获得[/b]：默认开启（[code]start_with_relic[/code]），每个玩家在开局时各拿一个。
+[*][b]瓦库的先古事件[/b]：狂吼耳环是瓦库初始选项池里的第 4 个候选（原版 3 个 + 本模组 1 个，约 1/4 概率出现）。
+[*][b]遗物图鉴里找不到它[/b]：它不注册进任何遗物池，所以不会出现在图鉴中，只能靠上面两种方式拿到。
+[/list]
+
+[h2]持有之后[/h2]
+[list]
+[*]每回合开始时获得额外能量，默认 1 点，可调到 0–9 点（实现上等同于提高最大能量，与原版低语耳环同构）。
+[*]瓦库接管你的每个回合：从当前可打出的牌里按设定顺序依次打出，默认每回合最多 50 张。
+[*]打满上限或没牌可打时停下，把回合交还给你——除非你打开了自动结束回合。
+[*]出牌目标自动选择：敌人、随机队友或自己，按卡牌本身的要求来。
+[/list]
+
+[h2]设置[/h2]
+设置界面需要可选的 RitsuLib；不装也能玩，直接编辑 JSON 配置文件即可。五项参数：
+[table]
+[tr][th]键[/th][th]作用[/th][th]默认[/th][th]允许范围[/th][/tr]
+[tr][td]energy_per_turn[/td][td]每回合额外能量[/td][td]1[/td][td]0 – 9[/td][/tr]
+[tr][td]max_cards_per_turn[/td][td]每回合自动出牌上限[/td][td]50[/td][td]1 – 100[/td][/tr]
+[tr][td]play_order[/td][td]出牌顺序：从左往右 / 从右往左 / 随机[/td][td]left_to_right[/td][td]left_to_right、right_to_left、random[/td][/tr]
+[tr][td]auto_end_turn[/td][td]打满上限或没牌可打时自动结束回合（不可反悔）[/td][td]false[/td][td]true / false[/td][/tr]
+[tr][td]start_with_relic[/td][td]开局直接获得狂吼耳环[/td][td]true[/td][td]true / false[/td][/tr]
+[/table]
+顺序设置只影响狂吼耳环自己，不影响原版低语耳环。
+
+[h2]配置文件[/h2]
+[code]<游戏目录>/mods/config/sts2-roaring-earring.cfg[/code]
+内容是 JSON，就这五个键：
+[code]{
+  "energy_per_turn": 1,
+  "max_cards_per_turn": 50,
+  "play_order": "left_to_right",
+  "auto_end_turn": false,
+  "start_with_relic": true
+}[/code]
+改动会立刻写回文件，但[b]从下一局开始生效[/b]：开局时这五个值会冻结成快照，本局中途怎么改都不影响本局。文件不存在时用默认值，启动日志里会有一行 [code]no config file found, using defaults[/code]。
+
+[h2]联机[/h2]
+[list]
+[*]参数以房主为准：房主在开局时广播自己的配置，客户端采纳后冻结，客户端不会写自己机器上的配置文件。
+[*]客户端如果在开局没收到房主配置，会在换层时补请，每层最多一次、每局封顶 5 次；用满之后本局沿用本机值，并在日志里写明。
+[*]遗物与它的能量都归每个玩家自己，不共享、不叠加。
+[*]原版「低语耳环」可以和本遗物同时持有，两套各自生效、互不屏蔽。低语耳环原本每回合 13 张的上限会被本模组的 [code]max_cards_per_turn[/code] 接管，取 max(13, 配置值)——只会变强不会变弱；补丁失效时保持原版 13 张。
+[/list]
+
+[h2]安装[/h2]
+[list]
+[*][b]创意工坊[/b]：订阅本条目即可。
+[*][b]手动[/b]：把发布包解压进 [code]<游戏目录>/mods/[/code]，该目录下应出现一层 [code]sts2-roaring-earring/[/code]，里面是模组的 dll 与 json。
+[*]同 id 的本地版与工坊版同时存在时，游戏只会启用其中一个，建议只留一处。
+[*][b]依赖[/b]：无。RitsuLib 只是可选的设置界面增强，不装也能完整游玩。
+[/list]
+
+[h2]已知限制，以及尚未实机验证的部分[/h2]
+[list]
+[*]不进遗物图鉴（没有遗物池归属），这是设计如此，不是 bug。
+[*]自动结束回合一旦触发不可反悔，不能把回合要回来。
+[*]下面这些只做过源码核对，[b]没有实机验证[/b]，请当作「按实现应当如此」：真实联机收发与消息 id；局内改设置不影响本局的实际表现；配置文件首次写盘；RitsuLib 设置页的真实观感；客户端采纳后再冻结的时序；两端版本不一致时的线格式兼容。
+[/list]
+
+[hr]
+[h1]English[/h1]
+[i]Mod version 0.1.0-beta · by kewu · for Slay the Spire 2 0.113.1[/i]
+
+[h2]What it does[/h2]
+An Ancient relic: Roaring Earring. Every turn you gain extra energy, and Vakuu takes over your turn, playing your playable cards one after another in the order you pick. You still build the deck and choose the path; the turns belong to Vakuu.
+
+[h2]How to get it[/h2]
+[list]
+[*][b]Start with it[/b]: on by default ([code]start_with_relic[/code]); every player receives one at run start.
+[*][b]Vakuu's Ancient event[/b]: the earring is the 4th candidate in Vakuu's initial pool (3 vanilla options plus this one, roughly 1 in 4).
+[*]It is not registered in any relic pool, so it never appears in the relic compendium.
+[/list]
+
+[h2]Settings[/h2]
+Edit the JSON file at [code]<game dir>/mods/config/sts2-roaring-earring.cfg[/code]; changes apply from the next run. A settings page is available if you install the optional RitsuLib.
+[table]
+[tr][th]Key[/th][th]Meaning[/th][th]Default[/th][th]Range[/th][/tr]
+[tr][td]energy_per_turn[/td][td]extra energy per turn[/td][td]1[/td][td]0 – 9[/td][/tr]
+[tr][td]max_cards_per_turn[/td][td]cards auto-played per turn[/td][td]50[/td][td]1 – 100[/td][/tr]
+[tr][td]play_order[/td][td]left_to_right / right_to_left / random[/td][td]left_to_right[/td][td]those three values[/td][/tr]
+[tr][td]auto_end_turn[/td][td]end the turn once the cap is hit or nothing is playable[/td][td]false[/td][td]true / false[/td][/tr]
+[tr][td]start_with_relic[/td][td]grant the relic at run start[/td][td]true[/td][td]true / false[/td][/tr]
+[/table]
+
+[h2]Multiplayer[/h2]
+The host's values win: the host broadcasts them at run start, clients adopt and freeze them, and a client never writes its own config file. Each player owns their own relic and energy. Vanilla Whispering Earring can be held alongside; its 13-card cap becomes max(13, max_cards_per_turn).
+
+[h2]Notes[/h2]
+[list]
+[*]No dependencies. RitsuLib is optional and only adds a settings page.
+[*]Source-verified only: real multiplayer delivery, config file writes, the RitsuLib page and cross-version wire compatibility have NOT been tested in game.
+[*]Feedback and bug reports: use the comments below.
+[/list]
+
+[hr]
+[url=https://ifdian.net/a/60KEWU09]爱发电 · support the author[/url]
