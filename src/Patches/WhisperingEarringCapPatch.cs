@@ -21,7 +21,7 @@ namespace Sts2RoaringEarring.Patches;
 /// Deliberately carries no [HarmonyPatch]: the target is compiler-generated and its name can move between game
 /// builds, and a null TargetMethod would abort the attribute-driven PatchAll for the whole mod. It is applied by
 /// hand from RoaringEarringMod.ApplyPatches instead, so every failure path degrades to today's vanilla behaviour.
-/// Our own relic is untouched: it reads RoaringConfigStore.Effective.MaxCardsPerTurn from its own loop.
+/// Our own relic is untouched: it reads RoaringRuntimeConfig.ForThisRun.MaxCardsPerTurn from its own loop.
 /// </remarks>
 internal static class WhisperingEarringCapPatch
 {
@@ -41,7 +41,7 @@ internal static class WhisperingEarringCapPatch
 	/// below 13 can leave the vanilla relic exactly as it is today but never worse.
 	/// </summary>
 	public static int MaxCardsPerTurn =>
-		Math.Max(RoaringConfigStore.Effective.MaxCardsPerTurn, WhisperingEarring.maxCardsToPlay);
+		Math.Max(RoaringRuntimeConfig.ForThisRun.MaxCardsPerTurn, WhisperingEarring.maxCardsToPlay);
 
 	public static void Apply(Harmony harmony)
 	{
@@ -118,7 +118,7 @@ internal static class WhisperingEarringCapPatch
 		}
 		Log.Info("[sts2-roaring-earring] whispering earring: transpiler replaced " + replaced
 			+ " ldc.i4.s 13 instruction(s) in " + StateMachineName + ".MoveNext; vanilla cap=" + MaxCardsPerTurn
-			+ " (max(13, config.max_cards_per_turn=" + RoaringConfigStore.Effective.MaxCardsPerTurn + "))");
+			+ " (max(13, config.max_cards_per_turn=" + RoaringRuntimeConfig.ForThisRun.MaxCardsPerTurn + "))");
 		return rewritten;
 	}
 

@@ -11,6 +11,7 @@ using MegaCrit.Sts2.Core.Modding;
 using MegaCrit.Sts2.Core.Runs;
 using Sts2RoaringEarring.Config;
 using Sts2RoaringEarring.Models;
+using Sts2RoaringEarring.Net;
 using Sts2RoaringEarring.Patches;
 
 namespace Sts2RoaringEarring;
@@ -25,6 +26,15 @@ public static class RoaringEarringMod
 		RoaringConfig config = RoaringConfigStore.Load();
 		ApplyPatches();
 		RunManager.Instance.RunStarted += OnRunStarted;
+		// The client-side self-heal for a config request that raced the host's handler is driven from room
+		// entry: it must not depend on the relic being owned, which a client cannot know before it adopts the
+		// host's start_with_relic.
+		RunManager.Instance.RoomEntered += OnRoomEntered;
+#if RITSULIB
+		// Optional: without the RitsuLib assemblies this compiles out, and a build without the reference
+		// drops the whole file (csproj Compile Remove), so the JSON file stays the only way in.
+		Integration.RitsuLibSettingsPage.TryRegister();
+#endif
 		Log.Info("[sts2-roaring-earring] initialized; energy_per_turn=" + config.EnergyPerTurn
 			+ ", max_cards_per_turn=" + config.MaxCardsPerTurn
 			+ ", play_order=" + RoaringConfig.PlayOrderToken(config.Order)
@@ -62,7 +72,30 @@ public static class RoaringEarringMod
 	{
 		try
 		{
-			if (!RoaringConfigStore.Effective.StartWithRelic)
+			// A run start is either a fresh run or a save load, so the previous run's frozen values are
+			// dropped before this one takes its own.
+			RoaringRuntimeConfig.ClearOverride();
+			RoaringRuntimeConfig.EndRun();
+			RoaringConfigSync.AttachForRun(state);
+			if (!RoaringRuntimeConfig.IsMultiplayerClient)
+			{
+				// Singleplayer and a host both own the values: the file as it is right now is this run's config.
+				RoaringRuntimeConfig.BeginRun(RoaringRuntimeConfig.Effective);
+			}
+		}
+		catch (Exception exception)
+		{
+			Log.Error("[sts2-roaring-earring] config sync failed at run start: " + exception);
+		}
+		try
+		{
+			if (RoaringRuntimeConfig.IsMultiplayerClient)
+			{
+				// A client cannot know the host's start_with_relic yet; OnHostConfigAdopted grants it one
+				// round trip later, and granting here would hand out a relic the host may have disabled.
+				return;
+			}
+			if (!RoaringRuntimeConfig.Effective.StartWithRelic)
 			{
 				return;
 			}
@@ -71,6 +104,42 @@ public static class RoaringEarringMod
 		catch (Exception exception)
 		{
 			Log.Error("[sts2-roaring-earring] run start hook failed: " + exception);
+		}
+	}
+
+	/// <summary>
+	/// A client suppresses the RunStarted grant because it cannot know the host's value yet; this grants the
+	/// instant the host's config has been adopted and frozen.
+	/// </summary>
+	internal static void OnHostConfigAdopted(RunState state)
+	{
+		try
+		{
+			if (!RoaringRuntimeConfig.Effective.StartWithRelic)
+			{
+				return;
+			}
+			TaskHelper.RunSafely(GrantStartingRelic(state));
+		}
+		catch (Exception exception)
+		{
+			Log.Error("[sts2-roaring-earring] granting the starting relic after adopting the host config failed: " + exception);
+		}
+	}
+
+	/// <summary>
+	/// Gameplay-side self-heal for a client whose first ask raced the host's handler registration: the floor
+	/// gate and the per-run cap both live in <see cref="RoaringConfigSync.RequestConfigIfMissing"/>.
+	/// </summary>
+	private static void OnRoomEntered()
+	{
+		try
+		{
+			RoaringConfigSync.RequestConfigIfMissing();
+		}
+		catch (Exception exception)
+		{
+			Log.Error("[sts2-roaring-earring] re-requesting the host config failed: " + exception);
 		}
 	}
 

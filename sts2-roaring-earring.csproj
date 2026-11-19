@@ -12,7 +12,35 @@
     <GameDataDir Condition="'$(GameDataDir)' == ''">D:\software\steam\steamapps\common\Slay the Spire 2\data_sts2_windows_x86_64</GameDataDir>
     <ModId>sts2-roaring-earring</ModId>
     <ModDistDir>$(MSBuildProjectDirectory)\dist\$(ModId)</ModDistDir>
+    <!-- RitsuLib 设置页开关：默认开启。关掉（-p:EnableRitsuLib=false）或本机找不到 RitsuLib 时，
+         项目退回「只认 JSON」的形态：不引用 RitsuLib，也不编译 src/Integration/**。 -->
+    <EnableRitsuLib Condition="'$(EnableRitsuLib)' == ''">true</EnableRitsuLib>
+    <RitsuLibDir Condition="'$(RitsuLibDir)' == ''">D:\software\Steam\steamapps\workshop\content\2868840\3747602295</RitsuLibDir>
+    <!-- RitsuLib 的 compat 目录按游戏 API 版本分叉；本机 RitsuLib 日志自报 "compat branch: 0.113.0" -->
+    <RitsuLibReferenceTarget Condition="'$(RitsuLibReferenceTarget)' == ''">0.113.0</RitsuLibReferenceTarget>
+    <RitsuLibAvailable Condition="'$(EnableRitsuLib)' == 'true' And Exists('$(RitsuLibDir)\RitsuLib.References.props')">true</RitsuLibAvailable>
+    <RitsuLibAvailable Condition="'$(RitsuLibAvailable)' == ''">false</RitsuLibAvailable>
   </PropertyGroup>
+
+  <!-- 官方引用方式：RitsuLib.References.props 自己给出五个 Reference 且全部 Private="False"，
+       所以 dist/sts2-roaring-earring/ 里只有本模组的 dll 与 json，不会混进 RitsuLib 的 dll。 -->
+  <Import Project="$(RitsuLibDir)\RitsuLib.References.props" Condition="'$(RitsuLibAvailable)' == 'true'" />
+
+  <PropertyGroup Condition="'$(RitsuLibAvailable)' == 'true'">
+    <DefineConstants>$(DefineConstants);RITSULIB</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(RitsuLibAvailable)' != 'true'">
+    <!-- 设置页源码用到 RitsuLib 的类型，没有引用时整体排除，保证零引用构建也能出产物 -->
+    <Compile Remove="src/Integration/**" />
+  </ItemGroup>
+
+  <Target Name="ReportRitsuLibState" BeforeTargets="CoreCompile">
+    <Message Importance="high" Condition="'$(RitsuLibAvailable)' == 'true'"
+             Text="RitsuLib settings page: enabled (RitsuLibReferenceTarget=$(RitsuLibReferenceTarget))" />
+    <Message Importance="high" Condition="'$(RitsuLibAvailable)' != 'true'"
+             Text="RitsuLib settings page: disabled (EnableRitsuLib=$(EnableRitsuLib), RitsuLibDir=$(RitsuLibDir)); building the JSON-only variant" />
+  </Target>
 
   <ItemGroup>
     <!-- scratch projects and the staged output must never join the mod's compile set -->

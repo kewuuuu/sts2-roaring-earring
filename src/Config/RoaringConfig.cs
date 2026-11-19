@@ -36,7 +36,7 @@ public sealed class RoaringConfig
 
 	public const bool DefaultStartWithRelic = true;
 
-	/// <summary>Extra max energy per turn, folded into the relic's DynamicVars.Energy.</summary>
+	/// <summary>Extra max energy per turn, added directly by the relic's ModifyMaxEnergy override.</summary>
 	public int EnergyPerTurn { get; init; } = DefaultEnergyPerTurn;
 
 	/// <summary>Upper bound of cards the relic may auto-play within one turn.</summary>

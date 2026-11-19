@@ -43,19 +43,27 @@ public sealed class RoaringEarring : RelicModel
 		return owner == null || !owner.Relics.Any((RelicModel relic) => relic is RoaringEarring);
 	}
 
-	/// <summary>Same shape as the vanilla relic: the energy comes from DynamicVars.Energy, not from the constant.</summary>
+	/// <summary>
+	/// Display-only: the relic's description counter is the only reader left (RelicModel.cs:93-111), because
+	/// <see cref="ModifyMaxEnergy"/> now reads the run's config directly. A canonical model is built once at
+	/// startup, so this value can never follow a settings change mid-session.
+	/// </summary>
 	protected override IEnumerable<DynamicVar> CanonicalVars => new DynamicVar[1]
 	{
-		new EnergyVar(RoaringConfigStore.Effective.EnergyPerTurn),
+		new EnergyVar(RoaringRuntimeConfig.ForThisRun.EnergyPerTurn),
 	};
 
+	/// <summary>
+	/// Read per call rather than from the DynamicVars snapshot: the snapshot is taken once when the canonical
+	/// model is built, which is why a value baked there would never follow the run's own config.
+	/// </summary>
 	public override decimal ModifyMaxEnergy(Player player, decimal amount)
 	{
 		if (player != base.Owner)
 		{
 			return amount;
 		}
-		return amount + base.DynamicVars.Energy.BaseValue;
+		return amount + RoaringRuntimeConfig.ForThisRun.EnergyPerTurn;
 	}
 
 	/// <remarks>
@@ -81,7 +89,9 @@ public sealed class RoaringEarring : RelicModel
 		{
 			return;
 		}
-		RoaringConfig config = RoaringConfigStore.Effective;
+		// The run's frozen values, not the file's current ones: a settings change mid-run must not move the
+		// numbers two peers already agreed on.
+		RoaringConfig config = RoaringRuntimeConfig.ForThisRun;
 		Flash();
 		int cardsPlayed = 0;
 		bool combatEnded = false;
