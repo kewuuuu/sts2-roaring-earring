@@ -1,0 +1,12 @@
+{
+  "id": "sts2-roaring-earring",
+  "name": "自动出牌 / 狂吼耳环",
+  "author": "kewu",
+  "description": "瓦库的耳环：每回合额外能量，并由瓦库接管你的每一回合，自动替你打出卡牌。",
+  "version": "0.1.0-beta",
+  "has_pck": false,
+  "has_dll": true,
+  "dependencies": [],
+  "affects_gameplay": true,
+  "min_game_version": "0.113.1"
+}
