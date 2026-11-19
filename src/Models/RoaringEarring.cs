@@ -25,6 +25,24 @@ public sealed class RoaringEarring : RelicModel
 {
 	public override RelicRarity Rarity => RelicRarity.Ancient;
 
+	/// <summary>
+	/// Belt and braces behind <c>VakuuPool1Patch</c>: one copy per player. Same idiom as the vanilla
+	/// MassiveScroll (MassiveScroll.cs:19), which also narrows a relic to "not for this run" here.
+	/// </summary>
+	/// <remarks>
+	/// The owner getter calls AssertMutable (RelicModel.cs:214-230), so a canonical instance must be answered
+	/// before it is read: the relic library and the pool helpers do ask canonical models whether they are allowed.
+	/// </remarks>
+	protected override bool IsAllowedInternal(IRunState runState)
+	{
+		if (!base.IsMutable)
+		{
+			return true;
+		}
+		Player? owner = base.Owner;
+		return owner == null || !owner.Relics.Any((RelicModel relic) => relic is RoaringEarring);
+	}
+
 	/// <summary>Same shape as the vanilla relic: the energy comes from DynamicVars.Energy, not from the constant.</summary>
 	protected override IEnumerable<DynamicVar> CanonicalVars => new DynamicVar[1]
 	{

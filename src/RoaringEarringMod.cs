@@ -11,6 +11,7 @@ using MegaCrit.Sts2.Core.Modding;
 using MegaCrit.Sts2.Core.Runs;
 using Sts2RoaringEarring.Config;
 using Sts2RoaringEarring.Models;
+using Sts2RoaringEarring.Patches;
 
 namespace Sts2RoaringEarring;
 
@@ -37,15 +38,20 @@ public static class RoaringEarringMod
 	/// </summary>
 	private static void ApplyPatches()
 	{
+		Harmony harmony = new Harmony(ModId);
 		try
 		{
-			new Harmony(ModId).PatchAll(Assembly.GetExecutingAssembly());
+			harmony.PatchAll(Assembly.GetExecutingAssembly());
 			Log.Info("[sts2-roaring-earring] harmony patches applied");
 		}
 		catch (Exception exception)
 		{
 			Log.Error("[sts2-roaring-earring] harmony patching failed: " + exception);
 		}
+		// The vanilla earring's 13-card budget lives inside a compiler-generated state machine, so it cannot be
+		// named by an attribute; it is patched by hand outside the try above so a resolution failure of this one
+		// patch can never swallow the attribute-driven ones.
+		WhisperingEarringCapPatch.Apply(harmony);
 	}
 
 	/// <summary>
