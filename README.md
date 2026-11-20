@@ -5,7 +5,7 @@
 
 - 目标游戏版本：v0.113.1（Steam 默认分支，Godot 4）
 - 运行时：游戏自带 mod 加载器（**不需要** BepInEx，**不需要**任何前置）
-- 当前版本：`0.1.0-beta`，作者 kewu
+- 当前版本：`0.2.0-beta`，作者 kewu
 - 状态：源码完成、构建通过；**尚未实机验证**的部分集中列在 [`docs/release.md`](docs/release.md)，
   请不要把本文当成实机验收报告。
 
@@ -109,7 +109,7 @@ RitsuLib 只是**可选**的设置界面增强：不装也能玩，配置照样�
 - 无池遗物 ⇒ 不进遗物图鉴。
 - `start_with_relic` 开启时每个玩家开局各拿一个；读档不补发。
 - 自动结束回合一旦触发不可反悔。
-- 0.1.0-beta 的未实机验证项见 [`docs/release.md`](docs/release.md)。
+- 0.2.0-beta 的未实机验证项见 [`docs/release.md`](docs/release.md)。
 
 ## 构建
 
