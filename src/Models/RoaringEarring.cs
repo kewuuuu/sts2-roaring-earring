@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using MegaCrit.Sts2.Core.Combat;
 using MegaCrit.Sts2.Core.Commands;
@@ -124,6 +125,12 @@ public sealed class RoaringEarring : RelicModel
 				Creature? target = GetTarget(card, combatState);
 				await card.SpendResources();
 				await CardCmd.AutoPlay(choiceContext, card, target, AutoPlayType.Default, skipXCapture: true);
+				if (config.PlayDelayMs > 0)
+				{
+					// A raw wait, not CustomScaledWait: this is the player's own pacing knob, so it must still
+					// apply when the game's fast mode is Instant. Combat end aborts it (ignoreCombatEnd defaults to false).
+					await Cmd.Wait(config.PlayDelayMs / 1000f, default(CancellationToken));
+				}
 			}
 		}
 		// Auto end turn only for the two natural endings: the cap was reached, or no playable card was left.

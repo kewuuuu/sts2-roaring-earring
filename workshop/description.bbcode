@@ -20,11 +20,12 @@
 [/list]
 
 [h2]设置[/h2]
-设置界面需要可选的 RitsuLib；不装也能玩，直接编辑 JSON 配置文件即可。五项参数：
+设置界面需要可选的 RitsuLib；不装也能玩，直接编辑 JSON 配置文件即可。六项参数：
 [table]
 [tr][th]键[/th][th]作用[/th][th]默认[/th][th]允许范围[/th][/tr]
 [tr][td]energy_per_turn[/td][td]每回合额外能量[/td][td]1[/td][td]0 – 9[/td][/tr]
 [tr][td]max_cards_per_turn[/td][td]每回合自动出牌上限[/td][td]50[/td][td]1 – 100[/td][/tr]
+[tr][td]play_delay_ms[/td][td]两张自动打出的牌之间额外停顿（毫秒），0 = 不停顿[/td][td]0[/td][td]0 – 600[/td][/tr]
 [tr][td]play_order[/td][td]出牌顺序：从左往右 / 从右往左 / 随机[/td][td]left_to_right[/td][td]left_to_right、right_to_left、random[/td][/tr]
 [tr][td]auto_end_turn[/td][td]打满上限或没牌可打时自动结束回合（不可反悔）[/td][td]false[/td][td]true / false[/td][/tr]
 [tr][td]start_with_relic[/td][td]开局直接获得狂吼耳环[/td][td]true[/td][td]true / false[/td][/tr]
@@ -37,6 +38,7 @@
 [code]{
   "energy_per_turn": 1,
   "max_cards_per_turn": 50,
+  "play_delay_ms": 0,
   "play_order": "left_to_right",
   "auto_end_turn": false,
   "start_with_relic": true
@@ -86,6 +88,7 @@ Edit the JSON file at [code]<game dir>/mods/config/sts2-roaring-earring.cfg[/cod
 [tr][th]Key[/th][th]Meaning[/th][th]Default[/th][th]Range[/th][/tr]
 [tr][td]energy_per_turn[/td][td]extra energy per turn[/td][td]1[/td][td]0 – 9[/td][/tr]
 [tr][td]max_cards_per_turn[/td][td]cards auto-played per turn[/td][td]50[/td][td]1 – 100[/td][/tr]
+[tr][td]play_delay_ms[/td][td]extra pause between auto-played cards, in ms (0 = none)[/td][td]0[/td][td]0 – 600[/td][/tr]
 [tr][td]play_order[/td][td]left_to_right / right_to_left / random[/td][td]left_to_right[/td][td]those three values[/td][/tr]
 [tr][td]auto_end_turn[/td][td]end the turn once the cap is hit or nothing is playable[/td][td]false[/td][td]true / false[/td][/tr]
 [tr][td]start_with_relic[/td][td]grant the relic at run start[/td][td]true[/td][td]true / false[/td][/tr]

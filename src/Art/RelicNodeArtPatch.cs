@@ -24,7 +24,9 @@ internal static class RelicNodeArtPatch
 	{
 		try
 		{
-			RelicModel model = __instance.Model;
+			// Reload can run before the model is attached, and NRelic.Model throws in that case, so read the
+			// private field: a relic node without a model is simply not ours yet.
+			RelicModel? model = Traverse.Create(__instance).Field("_model").GetValue<RelicModel>();
 			if (model is not RoaringEarring)
 			{
 				return;

@@ -120,6 +120,7 @@ public static class RoaringRuntimeConfig
 	{
 		string body = "energy=" + config.EnergyPerTurn
 			+ " cards=" + config.MaxCardsPerTurn
+			+ " delay=" + config.PlayDelayMs
 			+ " order=" + RoaringConfig.PlayOrderToken(config.Order)
 			+ " end=" + Bit(config.AutoEndTurn)
 			+ " start=" + Bit(config.StartWithRelic);
@@ -130,6 +131,7 @@ public static class RoaringRuntimeConfig
 	{
 		return left.EnergyPerTurn == right.EnergyPerTurn
 			&& left.MaxCardsPerTurn == right.MaxCardsPerTurn
+			&& left.PlayDelayMs == right.PlayDelayMs
 			&& left.Order == right.Order
 			&& left.AutoEndTurn == right.AutoEndTurn
 			&& left.StartWithRelic == right.StartWithRelic;

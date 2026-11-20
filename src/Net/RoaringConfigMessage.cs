@@ -16,6 +16,8 @@ public class RoaringConfigMessage : INetMessage, IPacketSerializable
 
 	public int MaxCardsPerTurn { get; set; }
 
+	public int PlayDelayMs { get; set; }
+
 	public int PlayOrderIndex { get; set; }
 
 	public bool AutoEndTurn { get; set; }
@@ -41,6 +43,7 @@ public class RoaringConfigMessage : INetMessage, IPacketSerializable
 		{
 			EnergyPerTurn = config.EnergyPerTurn,
 			MaxCardsPerTurn = config.MaxCardsPerTurn,
+			PlayDelayMs = config.PlayDelayMs,
 			PlayOrderIndex = ToIndex(config.Order),
 			AutoEndTurn = config.AutoEndTurn,
 			StartWithRelic = config.StartWithRelic
@@ -53,6 +56,7 @@ public class RoaringConfigMessage : INetMessage, IPacketSerializable
 		{
 			EnergyPerTurn = EnergyPerTurn,
 			MaxCardsPerTurn = MaxCardsPerTurn,
+			PlayDelayMs = PlayDelayMs,
 			Order = ToOrder(PlayOrderIndex),
 			AutoEndTurn = AutoEndTurn,
 			StartWithRelic = StartWithRelic
@@ -84,6 +88,7 @@ public class RoaringConfigMessage : INetMessage, IPacketSerializable
 		writer.WriteInt(PlayOrderIndex);
 		writer.WriteBool(AutoEndTurn);
 		writer.WriteBool(StartWithRelic);
+		writer.WriteInt(PlayDelayMs);
 	}
 
 	public void Deserialize(PacketReader reader)
@@ -93,5 +98,6 @@ public class RoaringConfigMessage : INetMessage, IPacketSerializable
 		PlayOrderIndex = reader.ReadInt();
 		AutoEndTurn = reader.ReadBool();
 		StartWithRelic = reader.ReadBool();
+		PlayDelayMs = reader.ReadInt();
 	}
 }

@@ -1,4 +1,4 @@
-# 发布说明（0.1.0-beta）
+# 发布说明（0.2.0-beta）
 
 ## 版本与产物
 
@@ -6,7 +6,7 @@
 | --- | --- |
 | 模组 id | `sts2-roaring-earring` |
 | 显示名 | 自动出牌 / 狂吼耳环 |
-| 版本 | `0.1.0-beta` |
+| 版本 | `0.2.0-beta` |
 | 作者 | kewu |
 | 最低游戏版本 | `0.113.1` |
 | 发布形态 | 仅 DLL（`has_pck: false`、`has_dll: true`） |
@@ -19,7 +19,7 @@
 
 - 先古遗物「狂吼耳环」（`ROARING_EARRING`）：每回合额外能量，并由瓦库接管每个回合自动出牌。
 - 瓦库事件初始池的第 4 个候选（原版 3 个 + 本模组 1 个，约 1/4）。
-- 5 项参数、cfg 读写、开局快照（局内改设置不影响本局）。
+- 6 项参数（本版新增 `play_delay_ms`：每张自动打出的牌之间可加 0..600 毫秒停顿）、cfg 读写、开局快照（局内改设置不影响本局）。
 - 联机参数同步：房主广播、客户端采纳并冻结、客户端不写本机文件。
 - 遗物图标/大图内嵌在 dll 里；解码失败只留一条日志并保持原版图标，不会让模组加载失败。
 - 可选的 RitsuLib 设置页（不装也能玩）。
@@ -115,11 +115,11 @@ sts2-roaring-earring/
 
 | 事实 | 位置 |
 | --- | --- |
-| 遗物稀有度、能量、接管、出牌顺序、目标、自动结束 | `src/Models/RoaringEarring.cs:26`、`:60-67`、`:75-137`、`:140-160`、`:163-174`、`:136` |
+| 遗物稀有度、能量、接管、出牌顺序、出牌间隔、目标、自动结束 | `src/Models/RoaringEarring.cs:26`、`:60-67`、`:75-140`、`:143-163`、`:166-177`、`:139` |
 | 每人最多一个 | `src/Models/RoaringEarring.cs:36-44` |
 | 瓦库池第 4 个候选 / 持有后隐藏低语耳环 | `src/Patches/VakuuPool1Patch.cs:29`、`:69-83` |
 | 低语耳环上限 `max(13, 配置)` | `src/Patches/WhisperingEarringCapPatch.cs:43-44` |
-| 5 个键、默认值、范围 | `src/Config/RoaringConfig.cs:21-37`、`:56-66` |
+| 6 个键、默认值、范围 | `src/Config/RoaringConfig.cs:21-43`、`:65-77` |
 | 配置文件路径与读写 | `src/Config/RoaringConfigStore.cs:78-94`、`:96-112` |
 | 开局快照 | `src/Config/RoaringRuntimeConfig.cs:27`、`:33-51` |
 | 房主广播 / 客户端采纳 / 补请上限 | `src/Net/RoaringConfigSync.cs:18`、`:78-122`、`:130-171` |

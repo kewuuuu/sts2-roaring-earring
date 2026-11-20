@@ -26,6 +26,10 @@ public sealed class RoaringConfig
 
 	public const int MaxCardsPerTurnMax = 100;
 
+	public const int PlayDelayMsMin = 0;
+
+	public const int PlayDelayMsMax = 600;
+
 	public const int DefaultEnergyPerTurn = 1;
 
 	public const int DefaultMaxCardsPerTurn = 50;
@@ -36,11 +40,16 @@ public sealed class RoaringConfig
 
 	public const bool DefaultStartWithRelic = true;
 
+	public const int DefaultPlayDelayMs = 0;
+
 	/// <summary>Extra max energy per turn, added directly by the relic's ModifyMaxEnergy override.</summary>
 	public int EnergyPerTurn { get; init; } = DefaultEnergyPerTurn;
 
 	/// <summary>Upper bound of cards the relic may auto-play within one turn.</summary>
 	public int MaxCardsPerTurn { get; init; } = DefaultMaxCardsPerTurn;
+
+	/// <summary>Extra pause between two auto-played cards, in milliseconds. 0 keeps the engine's own pace.</summary>
+	public int PlayDelayMs { get; init; } = DefaultPlayDelayMs;
 
 	/// <summary>left_to_right | right_to_left | random.</summary>
 	public PlayOrder Order { get; init; } = DefaultOrder;
@@ -59,6 +68,7 @@ public sealed class RoaringConfig
 		{
 			EnergyPerTurn = Math.Clamp(EnergyPerTurn, EnergyPerTurnMin, EnergyPerTurnMax),
 			MaxCardsPerTurn = Math.Clamp(MaxCardsPerTurn, MaxCardsPerTurnMin, MaxCardsPerTurnMax),
+			PlayDelayMs = Math.Clamp(PlayDelayMs, PlayDelayMsMin, PlayDelayMsMax),
 			Order = IsKnownOrder(Order) ? Order : DefaultOrder,
 			AutoEndTurn = AutoEndTurn,
 			StartWithRelic = StartWithRelic,
@@ -103,6 +113,7 @@ public sealed class RoaringConfig
 			{
 				EnergyPerTurn = ReadInt(document.RootElement, "energy_per_turn", defaults.EnergyPerTurn),
 				MaxCardsPerTurn = ReadInt(document.RootElement, "max_cards_per_turn", defaults.MaxCardsPerTurn),
+				PlayDelayMs = ReadInt(document.RootElement, "play_delay_ms", defaults.PlayDelayMs),
 				Order = ParseOrder(ReadString(document.RootElement, "play_order"), defaults.Order),
 				AutoEndTurn = ReadBool(document.RootElement, "auto_end_turn", defaults.AutoEndTurn),
 				StartWithRelic = ReadBool(document.RootElement, "start_with_relic", defaults.StartWithRelic),

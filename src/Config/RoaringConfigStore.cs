@@ -102,6 +102,7 @@ public static class RoaringConfigStore
 				writer.WriteStartObject();
 				writer.WriteNumber("energy_per_turn", config.EnergyPerTurn);
 				writer.WriteNumber("max_cards_per_turn", config.MaxCardsPerTurn);
+				writer.WriteNumber("play_delay_ms", config.PlayDelayMs);
 				writer.WriteString("play_order", RoaringConfig.PlayOrderToken(config.Order));
 				writer.WriteBoolean("auto_end_turn", config.AutoEndTurn);
 				writer.WriteBoolean("start_with_relic", config.StartWithRelic);

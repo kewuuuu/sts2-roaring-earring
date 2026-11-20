@@ -37,6 +37,7 @@ public static class RoaringEarringMod
 #endif
 		Log.Info("[sts2-roaring-earring] initialized; energy_per_turn=" + config.EnergyPerTurn
 			+ ", max_cards_per_turn=" + config.MaxCardsPerTurn
+			+ ", play_delay_ms=" + config.PlayDelayMs
 			+ ", play_order=" + RoaringConfig.PlayOrderToken(config.Order)
 			+ ", auto_end_turn=" + config.AutoEndTurn
 			+ ", start_with_relic=" + config.StartWithRelic);
