@@ -40,7 +40,9 @@ public static class RoaringEarringMod
 			+ ", play_delay_ms=" + config.PlayDelayMs
 			+ ", play_order=" + RoaringConfig.PlayOrderToken(config.Order)
 			+ ", auto_end_turn=" + config.AutoEndTurn
-			+ ", start_with_relic=" + config.StartWithRelic);
+			+ ", start_with_relic=" + config.StartWithRelic
+			+ ", skip_play_animation=" + config.SkipPlayAnimation
+			+ ", auto_play_anim_speed=" + config.AutoPlayAnimSpeed);
 	}
 
 	/// <summary>

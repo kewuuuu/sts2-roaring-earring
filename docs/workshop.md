@@ -8,13 +8,14 @@
 > 地址 https://steamcommunity.com/sharedfiles/filedetails/?id=3842516435 。
 > 2026-11-20 `--create` 首版 0.1.0-beta（4 文件 76544 B）；
 > 2026-11-21 `--update` 升到 0.2.0-beta（4 文件 78080 B，dll 67072 B）。
+> 0.2.1-beta 已本地构建（两个快速出牌参数 + 图集缺失 sprite 修复），尚未上传。
 > 之后改版只需升版本号（manifest + 正文两处）→ `tools\pack-workshop.ps1` → `--update 3842516435`。
 
 ## 1. 产物
 
 | 路径 | 作用 |
 | --- | --- |
-| `dist/workshop/sts2-roaring-earring/sts2-roaring-earring.dll` | 模组本体（0.2.0-beta：67072 B） |
+| `dist/workshop/sts2-roaring-earring/sts2-roaring-earring.dll` | 模组本体（0.2.1-beta：70144 B） |
 | `dist/workshop/sts2-roaring-earring/sts2-roaring-earring.json` | manifest（374 B） |
 | `dist/workshop/roaring_earring_icon.png` | 遗物小图标（128×128，2380 B），随 dll 内嵌使用，不在工坊内容根目录里也行 |
 | `dist/workshop/roaring_earring_big.png` | 遗物大图（512×512，8254 B），同上 |
@@ -107,9 +108,9 @@ dotnet run --project tools\WorkshopUploader -c Release -- --update <条目 id>
 
 注意最后两条容易踩：
 
-- 正文写的是 `模组版本 0.2.0-beta`（中英各一处），manifest 的 `version` 也是 `0.2.0-beta`；
+- 正文写的是 `模组版本 0.2.1-beta`（中英各一处），manifest 的 `version` 也是 `0.2.1-beta`；
   改版本号时**两处一起改**，否则 dry-run 直接报
-  `description says mod version ... but the manifest says ...`（0.2.0-beta 上传时就先被这条拦下一次）。
+  `description says mod version ... but the manifest says ...`（上一次 0.2.0-beta 上传时就先被这条拦下一次）。
 - 版本号正则只认 `模组版本` / `mod version` 后跟 `数字.数字.数字[-后缀]`；
   随手写「版本：beta」不会被检查，也就会漏掉不一致。
 

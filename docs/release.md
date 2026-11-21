@@ -1,4 +1,4 @@
-# 发布说明（0.2.0-beta）
+# 发布说明（0.2.1-beta）
 
 ## 版本与产物
 
@@ -6,7 +6,7 @@
 | --- | --- |
 | 模组 id | `sts2-roaring-earring` |
 | 显示名 | 自动出牌 / 狂吼耳环 |
-| 版本 | `0.2.0-beta` |
+| 版本 | `0.2.1-beta` |
 | 作者 | kewu |
 | 最低游戏版本 | `0.113.1` |
 | 发布形态 | 仅 DLL（`has_pck: false`、`has_dll: true`） |
@@ -19,9 +19,11 @@
 
 - 先古遗物「狂吼耳环」（`ROARING_EARRING`）：每回合额外能量，并由瓦库接管每个回合自动出牌。
 - 瓦库事件初始池的第 4 个候选（原版 3 个 + 本模组 1 个，约 1/4）。
-- 6 项参数（本版新增 `play_delay_ms`：每张自动打出的牌之间可加 0..600 毫秒停顿）、cfg 读写、开局快照（局内改设置不影响本局）。
+- 8 项参数（本版新增 `skip_play_animation`：跳过飞牌动画与 0.25–0.35 秒等待；`auto_play_anim_speed`：
+  只在自动出牌期间把 Spine 动画加速 1–3 倍。上一版新增 `play_delay_ms`）、cfg 读写、开局快照（局内改设置不影响本局）。
 - 联机参数同步：房主广播、客户端采纳并冻结、客户端不写本机文件。
 - 遗物图标/大图内嵌在 dll 里；解码失败只留一条日志并保持原版图标，不会让模组加载失败。
+  三个 getter 改为 prefix 覆盖，拿到图就跳过原版 `res://` 查找，因此 `Missing sprite 'roaring_earring'` 警告不再出现。
 - 可选的 RitsuLib 设置页（不装也能玩）。
 
 ## 构建
@@ -54,12 +56,12 @@ sts2-roaring-earring/
 
 - **源码核对**：本仓库文档里出现的每个默认值、范围、日志行、路径，都能在源码里找到对应位置
   （见文末「事实来源」）。
-- **构建**：协调者在本次文档工作之前确认 `dotnet build -c Release` 通过。
-  本轮文档工作**没有**重新构建（0 次），也**没有**启动游戏（0 次）。
+- **构建**：本轮改动之后跑过 2 次 `dotnet build -c Release`（均为 0 警告 0 错误，dll 70144 B）。
+  没有启动游戏（0 次）。
 
 ### 未实机验证（请如实对待）
 
-下面六项都只有源码依据，没有实机记录：
+下面八项都只有源码依据，没有实机记录：
 
 1. **真实联机收发与消息 id** —— 两条消息（请求/配置）在真实双端之间是否按预期送达，
    `message type ... id=<n>` 两端是否一致。
@@ -68,14 +70,17 @@ sts2-roaring-earring/
 4. **RitsuLib 设置页真实观感** —— 页面能否正常显示、滑条范围与文案是否正确。
 5. **客户端采纳后再冻结的时序** —— 客户端收到房主配置、采纳、冻结、补发遗物这一串动作的先后。
 6. **两端版本不一致时的线格式兼容** —— 消息没有版本号，只能追加字段；旧版/新版互连未验证。
+7. **动画加速与跳过出牌动画的真实观感** —— 两个新参数只做过源码与构建核对，没有在真实对局里比较过加速前后，
+   以及跳过后是否留下视觉残留。
+8. **设置页两个新控件的显示与写盘** —— 1–3 倍滑条与「跳过出牌动画」开关的文案、默认值没有在游戏内看过。
 
 ## 兼容性与线格式
 
 - 两条消息：`RoaringConfigRequestMessage`（客户端 → 房主，无字段）、
-  `RoaringConfigMessage`（房主 → 客户端，5 个字段按固定顺序序列化：
-  energy、cards、order、auto_end、start）。
+  `RoaringConfigMessage`（房主 → 客户端，8 个字段按固定顺序序列化：
+  energy、cards、order、auto_end、start、delay、skip、anim）。
 - **消息里没有版本号**。字段顺序就是线格式，只能追加，不能重排或删除
-  （`src/Net/RoaringConfigMessage.cs:79-96`）。
+  （`src/Net/RoaringConfigMessage.cs:91-113`）。
 - 消息 id 由类型名决定；类型名一旦发布就不能改，否则等于换了 id
   （`src/Net/RoaringConfigMessage.cs:8-12`）。
 - 任一端升级后字段有增删、另一端没升级 —— 这是上面第 6 条未验证项。
@@ -115,12 +120,13 @@ sts2-roaring-earring/
 
 | 事实 | 位置 |
 | --- | --- |
-| 遗物稀有度、能量、接管、出牌顺序、出牌间隔、目标、自动结束 | `src/Models/RoaringEarring.cs:26`、`:60-67`、`:75-140`、`:143-163`、`:166-177`、`:139` |
-| 每人最多一个 | `src/Models/RoaringEarring.cs:36-44` |
+| 遗物稀有度、能量、接管、出牌顺序、出牌间隔、目标、自动结束 | `src/Models/RoaringEarring.cs:26`、`:62-68`、`:77-155`、`:159-179`、`:182-193`、`:155` |
+| 每人最多一个 | `src/Models/RoaringEarring.cs:38-46` |
+| 自动出牌动画作用域 / 两个 Spine prefix | `src/Models/RoaringEarring.cs:103-108`、`src/Patches/AutoPlayAnimScope.cs:12-41` |
 | 瓦库池第 4 个候选 / 持有后隐藏低语耳环 | `src/Patches/VakuuPool1Patch.cs:29`、`:69-83` |
 | 低语耳环上限 `max(13, 配置)` | `src/Patches/WhisperingEarringCapPatch.cs:43-44` |
-| 6 个键、默认值、范围 | `src/Config/RoaringConfig.cs:21-43`、`:65-77` |
-| 配置文件路径与读写 | `src/Config/RoaringConfigStore.cs:78-94`、`:96-112` |
+| 8 个键、默认值、范围 | `src/Config/RoaringConfig.cs:21-51`、`:79-92` |
+| 配置文件路径与读写 | `src/Config/RoaringConfigStore.cs:78-94`、`:96-114` |
 | 开局快照 | `src/Config/RoaringRuntimeConfig.cs:27`、`:33-51` |
 | 房主广播 / 客户端采纳 / 补请上限 | `src/Net/RoaringConfigSync.cs:18`、`:78-122`、`:130-171` |
 | 开局发遗物（楼层门限、每人一个） | `src/RoaringEarringMod.cs:146-169` |
