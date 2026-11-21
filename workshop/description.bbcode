@@ -1,5 +1,5 @@
 [h1]自动出牌 / 狂吼耳环[/h1]
-[i]模组版本 0.2.2-beta · 作者 kewu · 适用游戏版本 0.113.1 · 单人 / 联机[/i]
+[i]模组版本 0.2.3-beta · 作者 kewu · 适用游戏版本 0.113.1 · 单人 / 联机[/i]
 
 [h2]这是什么[/h2]
 一个先古（Ancient）遗物。拿到它以后，每个回合的开始都会多给你能量，然后[b]瓦库接管你的回合[/b]，替你把能打的牌一张张打出去。牌组和路线还是你自己选，回合归瓦库。
@@ -8,7 +8,7 @@
 [list]
 [*][b]开局直接获得[/b]：默认开启（[code]start_with_relic[/code]），每个玩家在开局时各拿一个。
 [*][b]瓦库的先古事件[/b]：狂吼耳环是瓦库初始选项池里的第 4 个候选（原版 3 个 + 本模组 1 个，约 1/4 概率出现）。
-[*][b]遗物图鉴里找不到它[/b]：它不注册进任何遗物池，所以不会出现在图鉴中，只能靠上面两种方式拿到。
+[*][b]图鉴与控制台[/b]：它登记在 EventRelicPool（共享池之一，纯登记表，不进随机奖励），所以遗物图鉴的「远古 → 瓦库」里能看到，控制台 [code]relic ROARING_EARRING[/code] 也能拿到。
 [/list]
 
 [h2]持有之后[/h2]
@@ -63,14 +63,15 @@
 
 [h2]已知限制，以及尚未实机验证的部分[/h2]
 [list]
-[*]不进遗物图鉴（没有遗物池归属），这是设计如此，不是 bug。
+[*]图鉴归属是「远古 → 瓦库」，但瓦库事件的候选池仍是 3 个原版 + 本模组 1 个，两者不是同一条链路。
+[*]不进随机遗物奖励（宝箱/精英/商店），这是设计如此，不是 bug。
 [*]自动结束回合一旦触发不可反悔，不能把回合要回来。
 [*]下面这些只做过源码核对，[b]没有实机验证[/b]，请当作「按实现应当如此」：真实联机收发与消息 id；局内改设置不影响本局的实际表现；配置文件首次写盘；RitsuLib 设置页的真实观感；客户端采纳后再冻结的时序；两端版本不一致时的线格式兼容。
 [/list]
 
 [hr]
 [h1]English[/h1]
-[i]Mod version 0.2.2-beta · by kewu · for Slay the Spire 2 0.113.1[/i]
+[i]Mod version 0.2.3-beta · by kewu · for Slay the Spire 2 0.113.1[/i]
 
 [h2]What it does[/h2]
 An Ancient relic: Roaring Earring. Every turn you gain extra energy, and Vakuu takes over your turn, playing your playable cards one after another in the order you pick. You still build the deck and choose the path; the turns belong to Vakuu.

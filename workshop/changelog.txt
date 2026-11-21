@@ -1,3 +1,8 @@
+0.2.3-beta
+- 狂吼耳环登记进 EventRelicPool（共享池之一，纯登记表：随机奖励只读 SharedRelicPool 与角色池，宝箱/精英/商店不会开出它）。
+- 由此修好三件事：遗物图鉴「远古 → 瓦库」里能看到它；悬停它不再刷 RelicModel.get_Pool 的 InvalidOperationException；控制台 relic ROARING_EARRING 可用。
+- 瓦库事件的候选池不变（仍是 3 个原版 + 本模组 1 个，约 1/4）。
+
 0.2.2-beta
 - 回退 0.2.1-beta 的「跳过出牌动画（skip_play_animation）」与「动画倍速（auto_play_anim_speed）」：前者的实现会让手牌里的牌在打出后仍留在界面上，下回合抽到同一张还会刷 duplicate card 报错。
 - 参数回到 6 项；旧配置文件里的这两个键会被忽略，不用手动删。

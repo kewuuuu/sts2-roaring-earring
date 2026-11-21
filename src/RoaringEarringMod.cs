@@ -7,6 +7,7 @@ using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.Logging;
 using MegaCrit.Sts2.Core.Models;
+using MegaCrit.Sts2.Core.Models.RelicPools;
 using MegaCrit.Sts2.Core.Modding;
 using MegaCrit.Sts2.Core.Runs;
 using Sts2RoaringEarring.Config;
@@ -24,6 +25,13 @@ public static class RoaringEarringMod
 	public static void Init()
 	{
 		RoaringConfig config = RoaringConfigStore.Load();
+		// Registry only. EventRelicPool has no consumer (RelicGrabBag.cs:70-77 builds rewards from
+		// SharedRelicPool plus the character pool), so this keeps the relic out of random rewards while giving it
+		// what the rest of the game assumes every relic has: a pool (RelicModel.cs:176, which throws for a
+		// pool-less relic and takes hovering, and the Vakuu event, down with it), membership in ModelDb.AllRelics
+		// (ModelDb.cs:264), the relic library (NRelicCollectionCategory.cs:157) and the `relic` console command
+		// (RelicConsoleCmd.cs:68).
+		ModHelper.AddModelToPool<EventRelicPool, RoaringEarring>();
 		ApplyPatches();
 		RunManager.Instance.RunStarted += OnRunStarted;
 		// The client-side self-heal for a config request that raced the host's handler is driven from room
@@ -40,7 +48,8 @@ public static class RoaringEarringMod
 			+ ", play_delay_ms=" + config.PlayDelayMs
 			+ ", play_order=" + RoaringConfig.PlayOrderToken(config.Order)
 			+ ", auto_end_turn=" + config.AutoEndTurn
-			+ ", start_with_relic=" + config.StartWithRelic);
+			+ ", start_with_relic=" + config.StartWithRelic
+			+ ", relic_pool=EventRelicPool (registry only)");
 	}
 
 	/// <summary>

@@ -11,6 +11,7 @@ using MegaCrit.Sts2.Core.Logging;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Models.Events;
 using MegaCrit.Sts2.Core.Models.Relics;
+using MegaCrit.Sts2.Core.Runs;
 using Sts2RoaringEarring.Models;
 
 namespace Sts2RoaringEarring.Patches;
@@ -36,6 +37,8 @@ internal static class VakuuPool1Patch
 
 	private static int _reportedHidden;
 
+	private static int _reportedLibrary;
+
 	private static void Postfix(Vakuu __instance, ref List<EventOption> __result)
 	{
 		try
@@ -59,10 +62,16 @@ internal static class VakuuPool1Patch
 		{
 			return;
 		}
-		// 2. A canonical event has no owner, and its pool must stay the untouched vanilla three.
+		// 2. A canonical event has no owner. Outside a run that is the relic library reading AllPossibleOptions
+		// (Vakuu.cs:41): it needs our relic among the Vakuu options or the whole category is skipped
+		// (NRelicCollectionCategory.cs:197). During a run the pool stays the untouched vanilla three.
 		Player? owner = ancient.Owner;
 		if (owner == null)
 		{
+			if (!RunManager.Instance.IsInProgress)
+			{
+				AddLibraryEntry(ancient, options);
+			}
 			return;
 		}
 		// 3. Owning ours hides the vanilla earring from the same pool.
@@ -85,6 +94,30 @@ internal static class VakuuPool1Patch
 		{
 			Log.Info("[sts2-roaring-earring] vakuu: pool1 now offers 4 candidates, textKey=" + textKey
 				+ ", relic=" + roaring.Id.Entry);
+		}
+	}
+
+	/// <summary>
+	/// Library-only entry: display data and nothing else. <see cref="EventOption.FromRelic"/> needs a mutable relic
+	/// (EventOption.cs:171) and there is no player to attach it to, which is fine: <see cref="RelicModel.Pool"/>
+	/// resolves by id (EnergyIconHelper.cs:96-100), and a null onChosen keeps the option locked
+	/// (EventOption.cs:176-187), so it can never be picked from the library.
+	/// </summary>
+	private static void AddLibraryEntry(Vakuu ancient, List<EventOption> options)
+	{
+		try
+		{
+			RelicModel relic = ModelDb.Relic<RoaringEarring>().ToMutable();
+			string textKey = "VAKUU.pages.INITIAL.options." + relic.Id.Entry;
+			options.Add(EventOption.FromRelic(relic, ancient, (Func<Task>?)null, textKey));
+			if (Interlocked.Exchange(ref _reportedLibrary, 1) == 0)
+			{
+				Log.Info("[sts2-roaring-earring] vakuu: relic library entry added, textKey=" + textKey);
+			}
+		}
+		catch (Exception exception)
+		{
+			Log.Error("[sts2-roaring-earring] vakuu: relic library entry could not be built: " + exception);
 		}
 	}
 

@@ -1,4 +1,4 @@
-# 发布说明（0.2.2-beta）
+# 发布说明（0.2.3-beta）
 
 ## 版本与产物
 
@@ -6,7 +6,7 @@
 | --- | --- |
 | 模组 id | `sts2-roaring-earring` |
 | 显示名 | 自动出牌 / 狂吼耳环 |
-| 版本 | `0.2.2-beta` |
+| 版本 | `0.2.3-beta` |
 | 作者 | kewu |
 | 最低游戏版本 | `0.113.1` |
 | 发布形态 | 仅 DLL（`has_pck: false`、`has_dll: true`） |
@@ -24,6 +24,18 @@
 - 遗物图标/大图内嵌在 dll 里；解码失败只留一条日志并保持原版图标，不会让模组加载失败。
   三个 getter 改为 prefix 覆盖，拿到图就跳过原版 `res://` 查找，因此 `Missing sprite 'roaring_earring'` 警告不再出现。
 - 可选的 RitsuLib 设置页（不装也能玩）。
+
+## 0.2.3-beta 变更（相对 0.2.2-beta）
+
+- 遗物登记进 `EventRelicPool`：`src/RoaringEarringMod.cs` 的 `Init` 里 `ModHelper.AddModelToPool<EventRelicPool, RoaringEarring>()`。
+  该池没有消费者（`RelicGrabBag.cs:70-77` 只读 `SharedRelicPool` + 角色池），所以随机奖励不受影响，
+  但 `RelicModel.Pool`（`RelicModel.cs:176`）不再抛 `InvalidOperationException: Sequence contains no matching element`，
+  `ModelDb.AllRelics`（`ModelDb.cs:264`）随含它 ⇒ 图鉴（`NRelicCollectionCategory.cs:157`）与控制台 `relic`（`RelicConsoleCmd.cs:68`）都能找到。
+- 图鉴的「远古 → 瓦库」分类还要求它出现在 `Vakuu.AllPossibleOptions` 里（`NRelicCollectionCategory.cs:197`），
+  所以 `src/Patches/VakuuPool1Patch.cs` 在**非局内**的规范实例上追加一个仅用于展示的选项（`onChosen` 为 null ⇒ 锁定，选不了）；
+  局内路径不变，仍是 3 个原版 + 本模组 1 个（约 1/4）。
+- 已知未验证：图鉴/悬停两条链路只有源码核对与无头启动（`initialized; … relic_pool=EventRelicPool (registry only)`），
+  真正打开图鉴看观感仍需实机。
 
 > 历史：0.2.1-beta 的「跳过出牌动画 / 动画倍速」因手牌显示缺陷已在 0.2.2-beta 整体回退。
 

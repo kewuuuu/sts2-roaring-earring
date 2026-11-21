@@ -9,13 +9,14 @@
 > 2026-11-20 `--create` 首版 0.1.0-beta（4 文件 76544 B）；
 > 2026-11-21 `--update` 升到 0.2.0-beta（4 文件 78080 B，dll 67072 B）。
 > 2026-11-21 0.2.1-beta 本地构建、未上传；因手牌显示缺陷整体回退，改发 0.2.2-beta。
+> 2026-11-21 `--update` 升到 0.2.3-beta（4 文件 78080 B 同级，dll 67584 B）：遗物登记进 EventRelicPool，图鉴与控制台可用。
 > 之后改版只需升版本号（manifest + 正文两处）→ `tools\pack-workshop.ps1` → `--update 3842516435`。
 
 ## 1. 产物
 
 | 路径 | 作用 |
 | --- | --- |
-| `dist/workshop/sts2-roaring-earring/sts2-roaring-earring.dll` | 模组本体（0.2.2-beta：67072 B） |
+| `dist/workshop/sts2-roaring-earring/sts2-roaring-earring.dll` | 模组本体（0.2.3-beta：67584 B） |
 | `dist/workshop/sts2-roaring-earring/sts2-roaring-earring.json` | manifest（374 B） |
 | `dist/workshop/roaring_earring_icon.png` | 遗物小图标（128×128，2380 B），随 dll 内嵌使用，不在工坊内容根目录里也行 |
 | `dist/workshop/roaring_earring_big.png` | 遗物大图（512×512，8254 B），同上 |
@@ -42,7 +43,7 @@
 | `tools/WorkshopUploader/Program.cs:19` | `private const string ModId = "sts2-replica";` | `"sts2-roaring-earring"` | `CheckContent` 找 `<content>/sts2-replica/sts2-replica.dll`，直接报 missing |
 | `tools/WorkshopUploader/Program.cs:304` | `Path.Combine(directory.FullName, "sts2-replica.csproj")` | `"sts2-roaring-earring.csproj"` | 找不到仓库根，默认路径（dist/workshop、workshop/*.txt）全部回落到当前工作目录 |
 | `tools/WorkshopUploader/Program.cs:324` | `good_card_replica_big.png` | `roaring_earring_big.png` | `--preview` 不显式给就会报 preview missing |
-| `tools/WorkshopUploader/Program.cs:20` | `MinModDllBytes = 60000` | 保持 | 当前 dll 67072 B 通过；若以后瘦身到 60000 以下，dry-run 会报 `is N bytes (< 60000)` |
+| `tools/WorkshopUploader/Program.cs:20` | `MinModDllBytes = 60000` | 保持 | 当前 dll 67584 B 通过；若以后瘦身到 60000 以下，dry-run 会报 `is N bytes (< 60000)` |
 
 其余常量可以不动：`MaxTitleChars = 128`、`MaxDescriptionChars = 8000`、
 `MaxPreviewBytes = 1 MiB`（`:21-23`）。
@@ -108,7 +109,7 @@ dotnet run --project tools\WorkshopUploader -c Release -- --update <条目 id>
 
 注意最后两条容易踩：
 
-- 正文写的是 `模组版本 0.2.2-beta`（中英各一处），manifest 的 `version` 也是 `0.2.2-beta`；
+- 正文写的是 `模组版本 0.2.3-beta`（中英各一处），manifest 的 `version` 也是 `0.2.3-beta`；
   改版本号时**两处一起改**，否则 dry-run 直接报
   `description says mod version ... but the manifest says ...`（上一次 0.2.0-beta 上传时就先被这条拦下一次）。
 - 版本号正则只认 `模组版本` / `mod version` 后跟 `数字.数字.数字[-后缀]`；

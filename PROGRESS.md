@@ -1,4 +1,11 @@
 
+## 2026-11-21 0.2.3-beta：遗物登记进 EventRelicPool（图鉴/控制台/悬停）
+
+- 根因：遗物不在任何遗物池里 ⇒ RelicModel.Pool（RelicModel.cs:176）抛 Sequence contains no matching element，悬停它时经 EnergyIconHelper.GetPool 就崩；ModelDb.AllRelics（ModelDb.cs:264）不含它 ⇒ 图鉴缺位（NRelicCollectionCategory.cs:157）、控制台 relic 找不到（RelicConsoleCmd.cs:68）。
+- 修法：Init 里 ModHelper.AddModelToPool<EventRelicPool, RoaringEarring>()（纯登记表，RelicGrabBag.cs:70-77 只读 SharedRelicPool + 角色池，随机奖励不受影响）。
+- 图鉴「远古 → 瓦库」另需 Vakuu.AllPossibleOptions 含它（NRelicCollectionCategory.cs:197），故 VakuuPool1Patch 在非局内的规范实例上追加仅展示的锁定选项；局内路径不变。
+- 验收：dotnet build 0 警告 0 错误（dll 67584 B）；无头启动 exit=0，initialized 行含 relic_pool=EventRelicPool (registry only)，零 ERROR 指向本模组。
+
 ## 2026-11-21 0.2.2-beta：回退快速自动出牌
 
 - 用户实测多人局出现「牌都在手里」并刷 NPlayerHand duplicate card ERROR；根因是 0.2.1-beta 的 skip_play_animation 把 skipCardPileVisuals: true 传给 CardCmd.AutoPlay，CardPileCmd.cs:522 的 !skipVisuals 分支被跳过 ⇒ 手牌 UI 节点永不移除（CardPileCmd.cs:699 → NPlayerHand.cs:674/:725），下回合抽到同一实例时 NPlayerHand.cs:653 报 duplicate 并丢弃新节点。
