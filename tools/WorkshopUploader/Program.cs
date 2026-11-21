@@ -439,6 +439,14 @@ internal static class Program
         {
             report.Bad($"description is {length} chars (> {MaxDescriptionChars})");
         }
+
+        // Steam enforces the limit in UTF-8 bytes, not characters: 5541 characters of Chinese is 7982 bytes and
+        // passes, while 5942 characters (8704 bytes) came back as k_EResultInvalidParam at submit time.
+        int bytes = Encoding.UTF8.GetByteCount(description.Trim());
+        if (bytes > MaxDescriptionChars)
+        {
+            report.Bad($"description is {bytes} UTF-8 bytes (> {MaxDescriptionChars}); Steam would reject it with k_EResultInvalidParam");
+        }
     }
 
     private static void CheckPreview(string preview, Reporter report)

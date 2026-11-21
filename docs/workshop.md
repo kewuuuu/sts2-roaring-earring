@@ -146,6 +146,7 @@ dotnet run --project tools\WorkshopUploader -c Release -- --update <条目 id>
 | 卡在 `preparing content` / `uploading content` 不动 | 网络与 Steam 客户端状态；内容体积（当前不到 100 KB，正常应很快）；Steam 客户端是否掉线后重登 |
 | `InvalidHandle` 一类 Steamworks 错误 | SteamAPI 是否初始化成功、`--probe` 能否单独跑通；重跑一次 `--probe` 再决定是否重试上传 |
 | 上传「成功」但页面没变 | 条目是否被审核/隐藏；`--update` 用的 id 是否是同一个条目 |
+| `EResult k_EResultInvalidParam`，进度卡在 `uploading preview` | **正文超过 8000 字节**。Steam 的限额按 UTF-8 字节算，不是字符：0.3.0-beta 正文 5942 字符 = 8704 字节被拒；压到 5541 字符 = 7982 字节后同一命令 `k_EResultOK`。`Program.cs` 的 `CheckDescription` 现在同时校验字符数与字节数 |
 
 ## 9. 更新与回滚
 
@@ -155,3 +156,4 @@ dotnet run --project tools\WorkshopUploader -c Release -- --update <条目 id>
 - 回滚：把工坊条目可见性改成隐藏/私有，或上传上一版内容；本地玩家把
   `<游戏目录>/mods/sts2-roaring-earring/` 换成旧版 dll 即可，配置文件向后兼容（多出的键会被忽略）。
 - 绝不删除已发布条目的 id 记录：`dist/workshop-item-id.txt` 丢了就只能靠工坊后台找回。
+- 正文改动前先跑 `--dry-run`：字节数超限只会在最后 `SubmitItemUpdate` 才被 Steam 拒（`k_EResultInvalidParam`），前面的内容上传已经白跑。
