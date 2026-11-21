@@ -30,10 +30,6 @@ public sealed class RoaringConfig
 
 	public const int PlayDelayMsMax = 600;
 
-	public const int AutoPlayAnimSpeedMin = 1;
-
-	public const int AutoPlayAnimSpeedMax = 3;
-
 	public const int DefaultEnergyPerTurn = 1;
 
 	public const int DefaultMaxCardsPerTurn = 50;
@@ -45,10 +41,6 @@ public sealed class RoaringConfig
 	public const bool DefaultStartWithRelic = true;
 
 	public const int DefaultPlayDelayMs = 0;
-
-	public const bool DefaultSkipPlayAnimation = true;
-
-	public const int DefaultAutoPlayAnimSpeed = 1;
 
 	/// <summary>Extra max energy per turn, added directly by the relic's ModifyMaxEnergy override.</summary>
 	public int EnergyPerTurn { get; init; } = DefaultEnergyPerTurn;
@@ -68,12 +60,6 @@ public sealed class RoaringConfig
 	/// <summary>Hand the relic out at the start of a new run.</summary>
 	public bool StartWithRelic { get; init; } = DefaultStartWithRelic;
 
-	/// <summary>Skip the card-pile tween and the engine's 0.25-0.35s wait around an auto-played card. Cosmetic only.</summary>
-	public bool SkipPlayAnimation { get; init; } = DefaultSkipPlayAnimation;
-
-	/// <summary>Spine time-scale multiplier used only while the relic's auto-play loop runs; 1 leaves the scale alone.</summary>
-	public int AutoPlayAnimSpeed { get; init; } = DefaultAutoPlayAnimSpeed;
-
 	public static RoaringConfig Default => new RoaringConfig();
 
 	public RoaringConfig Normalized()
@@ -86,8 +72,6 @@ public sealed class RoaringConfig
 			Order = IsKnownOrder(Order) ? Order : DefaultOrder,
 			AutoEndTurn = AutoEndTurn,
 			StartWithRelic = StartWithRelic,
-			SkipPlayAnimation = SkipPlayAnimation,
-			AutoPlayAnimSpeed = Math.Clamp(AutoPlayAnimSpeed, AutoPlayAnimSpeedMin, AutoPlayAnimSpeedMax),
 		};
 	}
 
@@ -133,8 +117,6 @@ public sealed class RoaringConfig
 				Order = ParseOrder(ReadString(document.RootElement, "play_order"), defaults.Order),
 				AutoEndTurn = ReadBool(document.RootElement, "auto_end_turn", defaults.AutoEndTurn),
 				StartWithRelic = ReadBool(document.RootElement, "start_with_relic", defaults.StartWithRelic),
-				SkipPlayAnimation = ReadBool(document.RootElement, "skip_play_animation", defaults.SkipPlayAnimation),
-				AutoPlayAnimSpeed = ReadInt(document.RootElement, "auto_play_anim_speed", defaults.AutoPlayAnimSpeed),
 			}.Normalized();
 		}
 		catch (JsonException)

@@ -24,10 +24,6 @@ public class RoaringConfigMessage : INetMessage, IPacketSerializable
 
 	public bool StartWithRelic { get; set; }
 
-	public bool SkipPlayAnimation { get; set; }
-
-	public int AutoPlayAnimSpeed { get; set; }
-
 	// The host is the only sender, and NetHostGameService only echoes messages it receives
 	// (NetHostGameService.cs:159), so this flag has no local effect here.
 	public bool ShouldBroadcast => true;
@@ -50,9 +46,7 @@ public class RoaringConfigMessage : INetMessage, IPacketSerializable
 			PlayDelayMs = config.PlayDelayMs,
 			PlayOrderIndex = ToIndex(config.Order),
 			AutoEndTurn = config.AutoEndTurn,
-			StartWithRelic = config.StartWithRelic,
-			SkipPlayAnimation = config.SkipPlayAnimation,
-			AutoPlayAnimSpeed = config.AutoPlayAnimSpeed
+			StartWithRelic = config.StartWithRelic
 		};
 	}
 
@@ -65,9 +59,7 @@ public class RoaringConfigMessage : INetMessage, IPacketSerializable
 			PlayDelayMs = PlayDelayMs,
 			Order = ToOrder(PlayOrderIndex),
 			AutoEndTurn = AutoEndTurn,
-			StartWithRelic = StartWithRelic,
-			SkipPlayAnimation = SkipPlayAnimation,
-			AutoPlayAnimSpeed = AutoPlayAnimSpeed
+			StartWithRelic = StartWithRelic
 		};
 	}
 
@@ -97,9 +89,6 @@ public class RoaringConfigMessage : INetMessage, IPacketSerializable
 		writer.WriteBool(AutoEndTurn);
 		writer.WriteBool(StartWithRelic);
 		writer.WriteInt(PlayDelayMs);
-		// Appended after every released field: older peers stop reading before these two.
-		writer.WriteBool(SkipPlayAnimation);
-		writer.WriteInt(AutoPlayAnimSpeed);
 	}
 
 	public void Deserialize(PacketReader reader)
@@ -110,7 +99,5 @@ public class RoaringConfigMessage : INetMessage, IPacketSerializable
 		AutoEndTurn = reader.ReadBool();
 		StartWithRelic = reader.ReadBool();
 		PlayDelayMs = reader.ReadInt();
-		SkipPlayAnimation = reader.ReadBool();
-		AutoPlayAnimSpeed = reader.ReadInt();
 	}
 }

@@ -15,7 +15,6 @@ using MegaCrit.Sts2.Core.Models.Relics;
 using MegaCrit.Sts2.Core.Random;
 using MegaCrit.Sts2.Core.Runs;
 using Sts2RoaringEarring.Config;
-using Sts2RoaringEarring.Patches;
 
 namespace Sts2RoaringEarring.Models;
 
@@ -98,52 +97,41 @@ public sealed class RoaringEarring : RelicModel
 		int cardsPlayed = 0;
 		bool combatEnded = false;
 		bool turnEnded = false;
-		// The spine multiplier is process-wide, so it is armed for this loop only and dropped in the finally:
-		// a cancelled or failed turn must never leave manual plays sped up.
-		AutoPlayAnimScope.Active = config.AutoPlayAnimSpeed > 1;
-		AutoPlayAnimScope.Multiplier = config.AutoPlayAnimSpeed;
-		try
+		using (RunManager.Instance.CardSelectorStack.PushSelector(base.Owner, new VakuuCardSelector()))
 		{
-			using (RunManager.Instance.CardSelectorStack.PushSelector(base.Owner, new VakuuCardSelector()))
+			for (; cardsPlayed < config.MaxCardsPerTurn; cardsPlayed++)
 			{
-				for (; cardsPlayed < config.MaxCardsPerTurn; cardsPlayed++)
+				if (CombatManager.Instance.IsOverOrEnding)
 				{
-					if (CombatManager.Instance.IsOverOrEnding)
-					{
-						combatEnded = true;
-						break;
-					}
-					if (CombatManager.Instance.IsPlayerReadyToEndTurn(player))
-					{
-						turnEnded = true;
-						break;
-					}
-					if (base.Owner.PlayerCombatState?.TurnNumber != startTurn)
-					{
-						turnEnded = true;
-						break;
-					}
-					CardPile pile = PileType.Hand.GetPile(base.Owner);
-					CardModel? card = ChooseCard(pile.Cards, config.Order);
-					if (card == null)
-					{
-						break;
-					}
-					Creature? target = GetTarget(card, combatState);
-					await card.SpendResources();
-					await CardCmd.AutoPlay(choiceContext, card, target, AutoPlayType.Default, skipXCapture: true, skipCardPileVisuals: config.SkipPlayAnimation);
-					if (config.PlayDelayMs > 0)
-					{
-						// A raw wait, not CustomScaledWait: this is the player's own pacing knob, so it must still
-						// apply when the game's fast mode is Instant. Combat end aborts it (ignoreCombatEnd defaults to false).
-						await Cmd.Wait(config.PlayDelayMs / 1000f, default(CancellationToken));
-					}
+					combatEnded = true;
+					break;
+				}
+				if (CombatManager.Instance.IsPlayerReadyToEndTurn(player))
+				{
+					turnEnded = true;
+					break;
+				}
+				if (base.Owner.PlayerCombatState?.TurnNumber != startTurn)
+				{
+					turnEnded = true;
+					break;
+				}
+				CardPile pile = PileType.Hand.GetPile(base.Owner);
+				CardModel? card = ChooseCard(pile.Cards, config.Order);
+				if (card == null)
+				{
+					break;
+				}
+				Creature? target = GetTarget(card, combatState);
+				await card.SpendResources();
+				await CardCmd.AutoPlay(choiceContext, card, target, AutoPlayType.Default, skipXCapture: true);
+				if (config.PlayDelayMs > 0)
+				{
+					// A raw wait, not CustomScaledWait: this is the player's own pacing knob, so it must still
+					// apply when the game's fast mode is Instant. Combat end aborts it (ignoreCombatEnd defaults to false).
+					await Cmd.Wait(config.PlayDelayMs / 1000f, default(CancellationToken));
 				}
 			}
-		}
-		finally
-		{
-			AutoPlayAnimScope.Active = false;
 		}
 		// Auto end turn only for the two natural endings: the cap was reached, or no playable card was left.
 		// A finished combat and a turn that already changed must never end the turn again.

@@ -1,4 +1,11 @@
 
+## 2026-11-21 0.2.2-beta：回退快速自动出牌
+
+- 用户实测多人局出现「牌都在手里」并刷 NPlayerHand duplicate card ERROR；根因是 0.2.1-beta 的 skip_play_animation 把 skipCardPileVisuals: true 传给 CardCmd.AutoPlay，CardPileCmd.cs:522 的 !skipVisuals 分支被跳过 ⇒ 手牌 UI 节点永不移除（CardPileCmd.cs:699 → NPlayerHand.cs:674/:725），下回合抽到同一实例时 NPlayerHand.cs:653 报 duplicate 并丢弃新节点。
+- 回退 11 个路径：删 src/Patches/AutoPlayAnimScope.cs；配置删 skip_play_animation 与 auto_play_anim_speed；RoaringEarring 恢复 CardCmd.AutoPlay(..., skipXCapture: true)；联机消息尾部两字段一并删除（本版线格式回到 6 字段）。
+- 保留 play_delay_ms 与图标 prefix 覆盖（图集缺失 sprite 警告的修复不受影响）。
+- 验收：dotnet build -c Release 0 警告 0 错误，dll 67072 B；src/ 下 7 个旧标识符 grep 0 命中。
+
 ## 2026-11-21 0.2.1-beta：快速自动出牌 + 图集警告修复
 
 - 新配置 skip_play_animation（默认 true）：CardCmd.AutoPlay 传 skipCardPileVisuals: true，跳过飞牌补间与 OnPlayWrapper 里 0.25–0.35 秒等待（CardModel.cs:2020-2035）。

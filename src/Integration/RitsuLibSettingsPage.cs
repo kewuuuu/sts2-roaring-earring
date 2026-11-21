@@ -9,7 +9,7 @@ using Sts2RoaringEarring.Net;
 namespace Sts2RoaringEarring.Integration;
 
 /// <summary>
-/// 把 <see cref="RoaringConfig"/> 里玩家可调的 8 个键注册成 RitsuLib 设置界面里的一页。
+/// 把 <see cref="RoaringConfig"/> 里玩家可调的 6 个键注册成 RitsuLib 设置界面里的一页。
 /// 只有 csproj 打开 EnableRitsuLib 时才参与编译；运行期还要 RitsuLib 程序集确实加载了才会注册，
 /// 任何失败都被 <see cref="TryRegister"/> 挡成一条警告，模组其余部分不受影响。
 /// </summary>
@@ -64,7 +64,7 @@ internal static class RitsuLibSettingsPage
 		ModSettingsPageBuilder builder = new ModSettingsPageBuilder(RoaringEarringMod.ModId, PageId);
 		builder.WithTitle(ModSettingsText.Literal("狂吼耳环"));
 		builder.WithDescription(ModSettingsText.Literal(
-			"改动会立刻写回 sts2-roaring-earring.cfg，但从下一局开始生效：本局在开局时就把这 8 个值冻结了，"
+			"改动会立刻写回 sts2-roaring-earring.cfg，但从下一局开始生效：本局在开局时就把这 6 个值冻结了，"
 			+ "局内再改只影响之后创建的对局（读档开局同理）。"
 			+ "联机时以房主配置为准：客户端这里显示的是房主的数值，写入不会改动本机文件。"));
 		builder.WithModDisplayName(ModSettingsText.Literal("狂吼耳环 / Roaring Earring"));
@@ -102,21 +102,6 @@ internal static class RitsuLibSettingsPage
 					"两张自动打出的牌之间额外等待多久；0 表示不停顿，跟着游戏自身的节奏走。"
 					+ "把游戏设置里的快进模式调到「即时」只会免掉原版的出牌动画，这一项仍然生效。"
 					+ "只影响观感，不改变出哪张牌、不改变结果。改动从下一局开始生效。"));
-			section.AddToggle(
-				"skip_play_animation",
-				ModSettingsText.Literal("跳过出牌动画"),
-				BoolBinding("skip_play_animation", () => RoaringRuntimeConfig.Effective.SkipPlayAnimation, (target, value) => target.SkipPlayAnimation = value),
-				ModSettingsText.Literal("自动出牌时跳过飞牌动画与引擎的等待，只影响观感，不影响结算与联机同步；下一局生效。"),
-				() => true);
-			section.AddIntSlider(
-				"auto_play_anim_speed",
-				ModSettingsText.Literal("自动出牌动画速度（倍）"),
-				IntBinding("auto_play_anim_speed", () => RoaringRuntimeConfig.Effective.AutoPlayAnimSpeed, (target, value) => target.AutoPlayAnimSpeed = value),
-				RoaringConfig.AutoPlayAnimSpeedMin,
-				RoaringConfig.AutoPlayAnimSpeedMax,
-				1,
-				value => value <= 1 ? "不加速" : value + "×",
-				ModSettingsText.Literal("只作用于自动出牌期间，循环结束立刻恢复；1 倍不加速。改动从下一局开始生效。"));
 			section.AddIntSlider(
 				"play_order",
 				ModSettingsText.Literal("自动出牌顺序"),
@@ -199,7 +184,7 @@ internal static class RitsuLibSettingsPage
 	}
 
 	/// <summary>
-	/// 设置页的候选配置：8 个键全部可变，写回时合成完整的 <see cref="RoaringConfig"/>，不会丢键。
+	/// 设置页的候选配置：6 个键全部可变，写回时合成完整的 <see cref="RoaringConfig"/>，不会丢键。
 	/// </summary>
 	private sealed class DraftConfig
 	{
@@ -211,8 +196,6 @@ internal static class RitsuLibSettingsPage
 			Order = source.Order;
 			AutoEndTurn = source.AutoEndTurn;
 			StartWithRelic = source.StartWithRelic;
-			SkipPlayAnimation = source.SkipPlayAnimation;
-			AutoPlayAnimSpeed = source.AutoPlayAnimSpeed;
 		}
 
 		public int EnergyPerTurn { get; set; }
@@ -227,10 +210,6 @@ internal static class RitsuLibSettingsPage
 
 		public bool StartWithRelic { get; set; }
 
-		public bool SkipPlayAnimation { get; set; }
-
-		public int AutoPlayAnimSpeed { get; set; }
-
 		public RoaringConfig ToConfig()
 		{
 			return new RoaringConfig
@@ -240,9 +219,7 @@ internal static class RitsuLibSettingsPage
 				PlayDelayMs = PlayDelayMs,
 				Order = Order,
 				AutoEndTurn = AutoEndTurn,
-				StartWithRelic = StartWithRelic,
-				SkipPlayAnimation = SkipPlayAnimation,
-				AutoPlayAnimSpeed = AutoPlayAnimSpeed
+				StartWithRelic = StartWithRelic
 			};
 		}
 	}

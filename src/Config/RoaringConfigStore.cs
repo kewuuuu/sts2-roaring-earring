@@ -106,8 +106,6 @@ public static class RoaringConfigStore
 				writer.WriteString("play_order", RoaringConfig.PlayOrderToken(config.Order));
 				writer.WriteBoolean("auto_end_turn", config.AutoEndTurn);
 				writer.WriteBoolean("start_with_relic", config.StartWithRelic);
-				writer.WriteBoolean("skip_play_animation", config.SkipPlayAnimation);
-				writer.WriteNumber("auto_play_anim_speed", config.AutoPlayAnimSpeed);
 				writer.WriteEndObject();
 			}
 			return Encoding.UTF8.GetString(stream.ToArray());
