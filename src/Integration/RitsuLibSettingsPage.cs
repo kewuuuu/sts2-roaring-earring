@@ -9,7 +9,7 @@ using Sts2RoaringEarring.Net;
 namespace Sts2RoaringEarring.Integration;
 
 /// <summary>
-/// 把 <see cref="RoaringConfig"/> 里玩家可调的 6 个键注册成 RitsuLib 设置界面里的一页。
+/// 把 <see cref="RoaringConfig"/> 里玩家可调的 7 个键注册成 RitsuLib 设置界面里的一页。
 /// 只有 csproj 打开 EnableRitsuLib 时才参与编译；运行期还要 RitsuLib 程序集确实加载了才会注册，
 /// 任何失败都被 <see cref="TryRegister"/> 挡成一条警告，模组其余部分不受影响。
 /// </summary>
@@ -64,7 +64,7 @@ internal static class RitsuLibSettingsPage
 		ModSettingsPageBuilder builder = new ModSettingsPageBuilder(RoaringEarringMod.ModId, PageId);
 		builder.WithTitle(ModSettingsText.Literal("狂吼耳环"));
 		builder.WithDescription(ModSettingsText.Literal(
-			"改动会立刻写回 sts2-roaring-earring.cfg，但从下一局开始生效：本局在开局时就把这 6 个值冻结了，"
+			"改动会立刻写回 sts2-roaring-earring.cfg，但从下一局开始生效：本局在开局时就把这 7 个值冻结了，"
 			+ "局内再改只影响之后创建的对局（读档开局同理）。"
 			+ "联机时以房主配置为准：客户端这里显示的是房主的数值，写入不会改动本机文件。"));
 		builder.WithModDisplayName(ModSettingsText.Literal("狂吼耳环 / Roaring Earring"));
@@ -116,6 +116,14 @@ internal static class RitsuLibSettingsPage
 				ModSettingsText.Literal("自动结束回合"),
 				BoolBinding("auto_end_turn", () => RoaringRuntimeConfig.Effective.AutoEndTurn, (target, value) => target.AutoEndTurn = value),
 				ModSettingsText.Literal("手牌打完或达到上限后自动结束回合；战斗结束或回合已切换时不会重复结束。改动从下一局开始生效。"),
+				() => true);
+			section.AddToggle(
+				"show_toggle",
+				ModSettingsText.Literal("允许点击遗物开关"),
+				BoolBinding("show_toggle", () => RoaringRuntimeConfig.Effective.ShowToggle, (target, value) => target.ShowToggle = value),
+				ModSettingsText.Literal(
+					"开着时，左键点击自己的「狂吼耳环」可以开关自动出牌；关掉后这个点击无效，遗物始终按开工作。"
+					+ "改动从下一局开始生效。"),
 				() => true);
 		});
 
@@ -184,7 +192,7 @@ internal static class RitsuLibSettingsPage
 	}
 
 	/// <summary>
-	/// 设置页的候选配置：6 个键全部可变，写回时合成完整的 <see cref="RoaringConfig"/>，不会丢键。
+	/// 设置页的候选配置：7 个键全部可变，写回时合成完整的 <see cref="RoaringConfig"/>，不会丢键。
 	/// </summary>
 	private sealed class DraftConfig
 	{
@@ -196,6 +204,7 @@ internal static class RitsuLibSettingsPage
 			Order = source.Order;
 			AutoEndTurn = source.AutoEndTurn;
 			StartWithRelic = source.StartWithRelic;
+			ShowToggle = source.ShowToggle;
 		}
 
 		public int EnergyPerTurn { get; set; }
@@ -210,6 +219,8 @@ internal static class RitsuLibSettingsPage
 
 		public bool StartWithRelic { get; set; }
 
+		public bool ShowToggle { get; set; }
+
 		public RoaringConfig ToConfig()
 		{
 			return new RoaringConfig
@@ -219,7 +230,8 @@ internal static class RitsuLibSettingsPage
 				PlayDelayMs = PlayDelayMs,
 				Order = Order,
 				AutoEndTurn = AutoEndTurn,
-				StartWithRelic = StartWithRelic
+				StartWithRelic = StartWithRelic,
+				ShowToggle = ShowToggle
 			};
 		}
 	}

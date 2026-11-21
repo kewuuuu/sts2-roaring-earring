@@ -123,7 +123,8 @@ public static class RoaringRuntimeConfig
 			+ " delay=" + config.PlayDelayMs
 			+ " order=" + RoaringConfig.PlayOrderToken(config.Order)
 			+ " end=" + Bit(config.AutoEndTurn)
-			+ " start=" + Bit(config.StartWithRelic);
+			+ " start=" + Bit(config.StartWithRelic)
+			+ " show=" + Bit(config.ShowToggle);
 		return body + " h=" + Fnv1a(body);
 	}
 
@@ -134,7 +135,8 @@ public static class RoaringRuntimeConfig
 			&& left.PlayDelayMs == right.PlayDelayMs
 			&& left.Order == right.Order
 			&& left.AutoEndTurn == right.AutoEndTurn
-			&& left.StartWithRelic == right.StartWithRelic;
+			&& left.StartWithRelic == right.StartWithRelic
+			&& left.ShowToggle == right.ShowToggle;
 	}
 
 	private static string Bit(bool value)

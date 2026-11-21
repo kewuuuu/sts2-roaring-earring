@@ -1,4 +1,11 @@
 
+## 2026-11-21 0.3.0-beta：点击遗物切换自动出牌
+
+- 模型加 `[SavedProperty] public bool AutoPlayEnabled`（默认 true，老存档缺字段读初始值）；回合起点按 `(PlayerCombatState 引用, TurnNumber)` 懒快照，`ModifyMaxEnergy` 与 `AfterAutoPrePlayPhaseEnteredLate` 都读同一快照 ⇒ 点击只影响下一回合。
+- 配置第 7 键 `show_toggle`（默认 true）：为 false 时点击不生效、遗物始终按开工作（`EffectiveAutoPlayEnabled`）。
+- 联机：新 INetMessage `RoaringToggleMessage`（OwnerNetId + Enabled，Reliable，ShouldBroadcast=false）；客户端只向房主发请求，房主校验 `OwnerNetId == senderId` 后应用并广播已应用值，客户端只接受房主广播。
+- 点击入口：Harmony postfix 打在 `NClickableControl.OnRelease`（NClickableControl.cs:441-449 → :495-497 protected virtual；NButton 与 NRelicInventoryHolder 都未 override），只认 `NRelicInventoryHolder`，`LocalContext.IsMine` 过滤他人遗物，整段 try/catch。
+- 验收：dotnet build 0 警告 0 错误（dll 73728 B）；dll 内 UTF-16LE 命中 show_toggle / toggle_default / 中英新描述 / 下一回合生效，UTF-8 #Strings 命中 RoaringToggleMessage / RoaringToggleSync / RelicToggleClickPatch / AutoPlayEnabled / AutoPlayActiveThisTurn。
 ## 2026-11-21 0.2.3-beta：遗物登记进 EventRelicPool（图鉴/控制台/悬停）
 
 - 根因：遗物不在任何遗物池里 ⇒ RelicModel.Pool（RelicModel.cs:176）抛 Sequence contains no matching element，悬停它时经 EnergyIconHelper.GetPool 就崩；ModelDb.AllRelics（ModelDb.cs:264）不含它 ⇒ 图鉴缺位（NRelicCollectionCategory.cs:157）、控制台 relic 找不到（RelicConsoleCmd.cs:68）。

@@ -40,6 +40,9 @@ public sealed class RoaringConfig
 
 	public const bool DefaultStartWithRelic = true;
 
+	/// <summary>Whether left-clicking the relic toggles auto-play at all; false pins the relic on.</summary>
+	public const bool DefaultShowToggle = true;
+
 	public const int DefaultPlayDelayMs = 0;
 
 	/// <summary>Extra max energy per turn, added directly by the relic's ModifyMaxEnergy override.</summary>
@@ -60,6 +63,12 @@ public sealed class RoaringConfig
 	/// <summary>Hand the relic out at the start of a new run.</summary>
 	public bool StartWithRelic { get; init; } = DefaultStartWithRelic;
 
+	/// <summary>
+	/// Let the player switch the relic off (and back on) by left-clicking it. false makes the click inert and keeps
+	/// the relic working as if it were on.
+	/// </summary>
+	public bool ShowToggle { get; init; } = DefaultShowToggle;
+
 	public static RoaringConfig Default => new RoaringConfig();
 
 	public RoaringConfig Normalized()
@@ -72,6 +81,7 @@ public sealed class RoaringConfig
 			Order = IsKnownOrder(Order) ? Order : DefaultOrder,
 			AutoEndTurn = AutoEndTurn,
 			StartWithRelic = StartWithRelic,
+			ShowToggle = ShowToggle,
 		};
 	}
 
@@ -117,6 +127,7 @@ public sealed class RoaringConfig
 				Order = ParseOrder(ReadString(document.RootElement, "play_order"), defaults.Order),
 				AutoEndTurn = ReadBool(document.RootElement, "auto_end_turn", defaults.AutoEndTurn),
 				StartWithRelic = ReadBool(document.RootElement, "start_with_relic", defaults.StartWithRelic),
+				ShowToggle = ReadBool(document.RootElement, "show_toggle", defaults.ShowToggle),
 			}.Normalized();
 		}
 		catch (JsonException)

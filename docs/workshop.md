@@ -10,13 +10,14 @@
 > 2026-11-21 `--update` 升到 0.2.0-beta（4 文件 78080 B，dll 67072 B）。
 > 2026-11-21 0.2.1-beta 本地构建、未上传；因手牌显示缺陷整体回退，改发 0.2.2-beta。
 > 2026-11-21 `--update` 升到 0.2.3-beta（4 文件 78080 B 同级，dll 67584 B）：遗物登记进 EventRelicPool，图鉴与控制台可用。
+> 2026-11-21 `--update` 升到 0.3.0-beta（4 文件 84736 B，dll 73728 B）：左键点击遗物切换自动出牌 + 设置项 show_toggle。
 > 之后改版只需升版本号（manifest + 正文两处）→ `tools\pack-workshop.ps1` → `--update 3842516435`。
 
 ## 1. 产物
 
 | 路径 | 作用 |
 | --- | --- |
-| `dist/workshop/sts2-roaring-earring/sts2-roaring-earring.dll` | 模组本体（0.2.3-beta：67584 B） |
+| `dist/workshop/sts2-roaring-earring/sts2-roaring-earring.dll` | 模组本体（0.3.0-beta：73728 B） |
 | `dist/workshop/sts2-roaring-earring/sts2-roaring-earring.json` | manifest（374 B） |
 | `dist/workshop/roaring_earring_icon.png` | 遗物小图标（128×128，2380 B），随 dll 内嵌使用，不在工坊内容根目录里也行 |
 | `dist/workshop/roaring_earring_big.png` | 遗物大图（512×512，8254 B），同上 |

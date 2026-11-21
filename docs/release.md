@@ -1,4 +1,4 @@
-# 发布说明（0.2.3-beta）
+# 发布说明（0.3.0-beta）
 
 ## 版本与产物
 
@@ -6,7 +6,7 @@
 | --- | --- |
 | 模组 id | `sts2-roaring-earring` |
 | 显示名 | 自动出牌 / 狂吼耳环 |
-| 版本 | `0.2.3-beta` |
+| 版本 | `0.3.0-beta` |
 | 作者 | kewu |
 | 最低游戏版本 | `0.113.1` |
 | 发布形态 | 仅 DLL（`has_pck: false`、`has_dll: true`） |
@@ -19,11 +19,34 @@
 
 - 先古遗物「狂吼耳环」（`ROARING_EARRING`）：每回合额外能量，并由瓦库接管每个回合自动出牌。
 - 瓦库事件初始池的第 4 个候选（原版 3 个 + 本模组 1 个，约 1/4）。
-- 6 项参数（`play_delay_ms` 自 0.2.0-beta 起）、cfg 读写、开局快照（局内改设置不影响本局）。
+- 7 项参数（`play_delay_ms` 自 0.2.0-beta 起、`show_toggle` 自 0.3.0-beta 起）、cfg 读写、开局快照（局内改设置不影响本局）。
+- 左键点击遗物切换自动出牌（0.3.0-beta）：开关随存档保存，联机由房主权威广播。
 - 联机参数同步：房主广播、客户端采纳并冻结、客户端不写本机文件。
 - 遗物图标/大图内嵌在 dll 里；解码失败只留一条日志并保持原版图标，不会让模组加载失败。
   三个 getter 改为 prefix 覆盖，拿到图就跳过原版 `res://` 查找，因此 `Missing sprite 'roaring_earring'` 警告不再出现。
 - 可选的 RitsuLib 设置页（不装也能玩）。
+
+## 0.3.0-beta 变更（相对 0.2.3-beta）
+
+- **左键点击遗物切换自动出牌**：`src/Patches/RelicToggleClickPatch.cs` 是 `NClickableControl.OnRelease` 的 postfix。
+  输入链是 `NClickableControl.cs:504-522` → `:349-364` → `:390-410`（左键 + 可见 + 已聚焦）→ `:441-449` → `:495-497`；
+  补丁只认 `NRelicInventoryHolder`（`NRelicInventoryHolder.cs:28`、`:162`），并用 `LocalContext.IsMine`
+  排除别人的遗物（`LocalContext.cs:148-155`）。悬停与右键到不了 `OnRelease`。原版的查看遗物界面照旧打开。
+- **开关进存档**：`src/Models/RoaringEarring.cs` 新增 `[SavedProperty] public bool AutoPlayEnabled`，默认 `true`；
+  老存档缺这个字段 ⇒ 读到 C# 初始值（开，`RelicModel.cs:599-608` 只填存在的属性）。新增存档属性会改变
+  模型属性哈希（`ModelIdSerializationCache.cs:157-181`），所以版本号必须升。
+- **下一回合生效**：能量读的是回合起点快照。每回合第一次读最大能量发生在 `CombatManager.cs:916-923`
+  的 `ResetEnergy()`/`AddMaxEnergyToCurrent()`（`PlayerCombatState.cs:110`、`:182-184`），早于任何模型
+  回合开始钩子（`CombatManager.cs:950`），所以快照只能懒取在 `ModifyMaxEnergy` 里，
+  用 `(PlayerCombatState 引用, TurnNumber)` 作键（每场战斗新建一份，`Player.cs:807-810`）。
+- **联机同步**：新消息 `RoaringToggleMessage`（所有者 NetId + 一个 bool）。客户端只发给房主
+  （`NetClientGameService.cs:83-95`），房主校验 `OwnerNetId == senderId`、应用到局面再广播
+  （`NetHostGameService.cs:114-130`）；`ShouldBroadcast = false`，避免房主还没校验就被自动转发
+  （`NetHostGameService.cs:159-162`）。只同步这一个 bool。
+- **配置键 `show_toggle`**（默认 `true`）：`false` 时点击无效、遗物始终按「开」工作。写盘顺序追加在
+  `start_with_relic` 之后（`src/Config/RoaringConfigStore.cs`），指纹与 `SameValues` 一并纳入。
+- 已知未验证：真实双端的点击切换时序（客户端请求与房主广播的先后）、读档后新字段的缺省、
+  点击与悬停/查看界面的交互观感。
 
 ## 0.2.3-beta 变更（相对 0.2.2-beta）
 
@@ -69,28 +92,33 @@ sts2-roaring-earring/
 
 - **源码核对**：本仓库文档里出现的每个默认值、范围、日志行、路径，都能在源码里找到对应位置
   （见文末「事实来源」）。
-- **构建**：本轮改动之后跑过 2 次 `dotnet build -c Release`（均为 0 警告 0 错误，dll 70144 B）。
-  没有启动游戏（0 次）。
+- **构建**：0.3.0-beta 的改动之后跑过 2 次 `dotnet build -c Release`（均为 0 警告 0 错误，
+  dll 73728 B）。没有启动游戏（0 次）。
 
 ### 未实机验证（请如实对待）
 
 下面六项都只有源码依据，没有实机记录：
 
-1. **真实联机收发与消息 id** —— 两条消息（请求/配置）在真实双端之间是否按预期送达，
+1. **真实联机收发与消息 id** —— 三条消息（请求/配置/开关）在真实双端之间是否按预期送达，
    `message type ... id=<n>` 两端是否一致。
 2. **局内改设置不影响本局的实际表现** —— 快照逻辑已实现，但没有在真实对局里观察过改设置前后的数值。
 3. **cfg 首次写入** —— `mods/config/` 目录自动创建、首次写盘的权限与结果。
 4. **RitsuLib 设置页真实观感** —— 页面能否正常显示、滑条范围与文案是否正确。
 5. **客户端采纳后再冻结的时序** —— 客户端收到房主配置、采纳、冻结、补发遗物这一串动作的先后。
 6. **两端版本不一致时的线格式兼容** —— 消息没有版本号，只能追加字段；旧版/新版互连未验证。
+7. **点击切换本身** —— 点击入口、`IsMine` 过滤、下一回合生效的时点都只有源码依据；本机没有启动过游戏。
+8. **联机下的点击切换** —— 客户端请求与房主广播的先后、房主自己点击时的本地应用，都没有双端实测。
 
 ## 兼容性与线格式
 
-- 两条消息：`RoaringConfigRequestMessage`（客户端 → 房主，无字段）、
+- 三条消息：`RoaringConfigRequestMessage`（客户端 → 房主，无字段）、
   `RoaringConfigMessage`（房主 → 客户端，6 个字段按固定顺序序列化：
-  energy、cards、order、auto_end、start、delay）。
+  energy、cards、order、auto_end、start、delay）、
+  `RoaringToggleMessage`（0.3.0-beta 新增；客户端 → 房主是请求，房主 → 客户端是应用后的值；
+  两个字段：owner NetId、bool）。
 - **消息里没有版本号**。字段顺序就是线格式，只能追加，不能重排；0.2.2-beta 删除了末尾的
-  `skip`、`anim` 两个字段（`src/Net/RoaringConfigMessage.cs:83-103`）。
+  `skip`、`anim` 两个字段（`src/Net/RoaringConfigMessage.cs:83-103`）。0.3.0-beta 没有动
+  `RoaringConfigMessage` 的任何字段，开关走独立消息类型；`show_toggle` 只是 cfg 的键，不进线格式。
 - 消息 id 由类型名决定；类型名一旦发布就不能改，否则等于换了 id
   （`src/Net/RoaringConfigMessage.cs:8-12`）。
 - 任一端升级后字段有增删、另一端没升级 —— 这是上面第 6 条未验证项。
@@ -112,8 +140,8 @@ sts2-roaring-earring/
 - 删除 `<游戏目录>/mods/sts2-roaring-earring/`，或退订创意工坊条目。
 - 配置文件 `<游戏目录>/mods/config/sts2-roaring-earring.cfg` 可以留着：
   不装模组时没有代码读它。想彻底清干净就一并删除。
-- 模组没有写入存档结构（`[SavedProperty]` 一类），回滚不会污染已有存档。
-  已经拿到遗物的一局在回滚后遗物会消失。
+- 0.3.0-beta 起遗物会写入一个 `[SavedProperty]`（`AutoPlayEnabled`，一个 bool）。回滚后没有人读它，
+  不影响其它存档内容；已经拿到遗物的一局在回滚后遗物会消失。
 
 ## 发布前检查表
 
@@ -134,9 +162,13 @@ sts2-roaring-earring/
 | 每人最多一个 | `src/Models/RoaringEarring.cs:37-45` |
 | 瓦库池第 4 个候选 / 持有后隐藏低语耳环 | `src/Patches/VakuuPool1Patch.cs:29`、`:69-83` |
 | 低语耳环上限 `max(13, 配置)` | `src/Patches/WhisperingEarringCapPatch.cs:43-44` |
-| 6 个键、默认值、范围 | `src/Config/RoaringConfig.cs:21-43`、`:65-76` |
+| 7 个键、默认值、范围 | `src/Config/RoaringConfig.cs:21-45`、`:74-86` |
 | 配置文件路径与读写 | `src/Config/RoaringConfigStore.cs:78-94`、`:96-113` |
 | 开局快照 | `src/Config/RoaringRuntimeConfig.cs:27`、`:33-51` |
 | 房主广播 / 客户端采纳 / 补请上限 | `src/Net/RoaringConfigSync.cs:18`、`:78-122`、`:130-171` |
 | 开局发遗物（楼层门限、每人一个） | `src/RoaringEarringMod.cs:147-170` |
 | RitsuLib 可选 | `sts2-roaring-earring.csproj:15-43`、`src/Integration/RitsuLibSettingsPage.cs:26-60` |
+| 点击入口 / 本地玩家过滤 | `src/Patches/RelicToggleClickPatch.cs`；`NClickableControl.cs:390-410`、`:441-449`、`:495-497`；`NRelicInventoryHolder.cs:162`；`LocalContext.cs:148-155` |
+| 开关存档字段与回合快照 | `src/Models/RoaringEarring.cs`；`RelicModel.cs:588-608`；`CombatManager.cs:916-923`；`PlayerCombatState.cs:110`、`:182-184` |
+| 开关联机消息 | `src/Net/RoaringToggleMessage.cs`；`NetClientGameService.cs:83-95`；`NetHostGameService.cs:114-130`、`:159-162` |
+| `show_toggle` 键 | `src/Config/RoaringConfig.cs`、`src/Config/RoaringConfigStore.cs`、`src/Config/RoaringRuntimeConfig.cs` |

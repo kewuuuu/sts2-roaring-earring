@@ -14,6 +14,7 @@ using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Models.Relics;
 using MegaCrit.Sts2.Core.Random;
 using MegaCrit.Sts2.Core.Runs;
+using MegaCrit.Sts2.Core.Saves.Runs;
 using Sts2RoaringEarring.Config;
 
 namespace Sts2RoaringEarring.Models;
@@ -54,6 +55,73 @@ public sealed class RoaringEarring : RelicModel
 		new EnergyVar(RoaringRuntimeConfig.ForThisRun.EnergyPerTurn),
 	};
 
+	/// <summary>Default of <see cref="AutoPlayEnabled"/>; an old save has no such property and reads as on.</summary>
+	public const bool DefaultAutoPlayEnabled = true;
+
+	private bool _autoPlayEnabled = DefaultAutoPlayEnabled;
+
+	/// <summary>
+	/// The owner's own switch, flipped by left-clicking the relic (RelicToggleClickPatch) and carried through a
+	/// save: [SavedProperty] registers it in the model's property table (ModelIdSerializationCache.cs:157-181) and
+	/// restores it on load (RelicModel.cs:588-608). A save written before 0.3.0-beta has no value for it, so
+	/// SavedProperties.Fill leaves the field at its initializer (SavedProperties.cs:273-283): old saves read as on.
+	/// Only the authority writes it (singleplayer, or the host); a client applies what the host sends.
+	/// </summary>
+	[SavedProperty]
+	public bool AutoPlayEnabled
+	{
+		get
+		{
+			return _autoPlayEnabled;
+		}
+		set
+		{
+			AssertMutable();
+			_autoPlayEnabled = value;
+		}
+	}
+
+	private PlayerCombatState? _snapshotState;
+
+	private int _snapshotTurn;
+
+	private bool _snapshotEnabled;
+
+	/// <summary>
+	/// On when the config disables clicking (show_toggle = false keeps the relic working as if it were on),
+	/// otherwise whatever the owner last chose.
+	/// </summary>
+	private bool EffectiveAutoPlayEnabled => !RoaringRuntimeConfig.ForThisRun.ShowToggle || _autoPlayEnabled;
+
+	/// <summary>
+	/// Whether auto-play is in force for the turn currently being fought. The value is snapshotted at the turn
+	/// boundary, so a click changes the next turn and never the one already running.
+	/// It has to be taken lazily here because a turn's first energy read happens before any model hook of that
+	/// turn: CombatManager.SetupPlayerTurn calls PlayerCombatState.ResetEnergy (CombatManager.cs:916-919), which
+	/// reads MaxEnergy (PlayerCombatState.cs:182-184), which is Hook.ModifyMaxEnergy (PlayerCombatState.cs:110);
+	/// AfterPlayerTurnStart only runs at CombatManager.cs:950 and AfterAutoPrePlayPhaseEntered at CombatManager.cs:891.
+	/// PlayerCombatState is rebuilt per combat (Player.cs:807-810), and TurnNumber advances once per player turn
+	/// (CombatManager.cs:1999-2002, PlayerCombatState.cs:177-180), so (instance, TurnNumber) names exactly one turn.
+	/// The increment happens on the side switch, i.e. before SetupPlayerTurn reads energy again, which is why a
+	/// click lands on the next turn and not the one in progress.
+	/// </summary>
+	private bool AutoPlayActiveThisTurn()
+	{
+		PlayerCombatState? state = base.Owner?.PlayerCombatState;
+		if (state == null)
+		{
+			// Outside combat (card reward display and friends) there is no turn to snapshot.
+			return EffectiveAutoPlayEnabled;
+		}
+		if (!ReferenceEquals(state, _snapshotState) || state.TurnNumber != _snapshotTurn)
+		{
+			_snapshotState = state;
+			_snapshotTurn = state.TurnNumber;
+			_snapshotEnabled = EffectiveAutoPlayEnabled;
+		}
+		return _snapshotEnabled;
+	}
+
 	/// <summary>
 	/// Read per call rather than from the DynamicVars snapshot: the snapshot is taken once when the canonical
 	/// model is built, which is why a value baked there would never follow the run's own config.
@@ -62,6 +130,11 @@ public sealed class RoaringEarring : RelicModel
 	{
 		if (player != base.Owner)
 		{
+			return amount;
+		}
+		if (!AutoPlayActiveThisTurn())
+		{
+			// Switched off, or clicking is off for the whole run: no energy either.
 			return amount;
 		}
 		return amount + RoaringRuntimeConfig.ForThisRun.EnergyPerTurn;
@@ -77,6 +150,12 @@ public sealed class RoaringEarring : RelicModel
 	{
 		if (player != base.Owner)
 		{
+			return;
+		}
+		if (!AutoPlayActiveThisTurn())
+		{
+			// The same snapshot the energy read used: a click during this turn does not cut a loop that is already
+			// running, and every peer decides it from a value both had before the turn began.
 			return;
 		}
 		ICombatState? combatState = player.Creature.CombatState;

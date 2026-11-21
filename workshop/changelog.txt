@@ -1,3 +1,8 @@
+0.3.0-beta
+- 左键点击遗物栏里的「狂吼耳环」可以关掉 / 打开自动出牌：关掉后不再加能量、也不再接管回合，改动从下一回合生效。
+- 这个开关按玩家存进存档（[SavedProperty] AutoPlayEnabled，默认开）；老存档没有这一项时按开处理。
+- 新增设置项 show_toggle（默认 true）：设成 false 后点击不再切换，遗物始终按开工作。
+- 多人局里由房主裁定：客户端点击只是向房主发请求，房主应用后广播同一个值；双端必须是同一版本。
 0.2.3-beta
 - 狂吼耳环登记进 EventRelicPool（共享池之一，纯登记表：随机奖励只读 SharedRelicPool 与角色池，宝箱/精英/商店不会开出它）。
 - 由此修好三件事：遗物图鉴「远古 → 瓦库」里能看到它；悬停它不再刷 RelicModel.get_Pool 的 InvalidOperationException；控制台 relic ROARING_EARRING 可用。

@@ -49,6 +49,8 @@ public static class RoaringEarringMod
 			+ ", play_order=" + RoaringConfig.PlayOrderToken(config.Order)
 			+ ", auto_end_turn=" + config.AutoEndTurn
 			+ ", start_with_relic=" + config.StartWithRelic
+			+ ", show_toggle=" + config.ShowToggle
+			+ ", toggle_default=" + RoaringEarring.DefaultAutoPlayEnabled
 			+ ", relic_pool=EventRelicPool (registry only)");
 	}
 
@@ -87,6 +89,8 @@ public static class RoaringEarringMod
 			RoaringRuntimeConfig.ClearOverride();
 			RoaringRuntimeConfig.EndRun();
 			RoaringConfigSync.AttachForRun(state);
+			// Same lifecycle as the config sync: one handler per net service, re-registered at the next run start.
+			RoaringToggleSync.AttachForRun(state);
 			if (!RoaringRuntimeConfig.IsMultiplayerClient)
 			{
 				// Singleplayer and a host both own the values: the file as it is right now is this run's config.

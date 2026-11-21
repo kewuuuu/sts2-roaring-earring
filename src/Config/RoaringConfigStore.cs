@@ -106,6 +106,8 @@ public static class RoaringConfigStore
 				writer.WriteString("play_order", RoaringConfig.PlayOrderToken(config.Order));
 				writer.WriteBoolean("auto_end_turn", config.AutoEndTurn);
 				writer.WriteBoolean("start_with_relic", config.StartWithRelic);
+				// Appended after the 0.2.x keys: an older build reads the keys it knows and ignores this one.
+				writer.WriteBoolean("show_toggle", config.ShowToggle);
 				writer.WriteEndObject();
 			}
 			return Encoding.UTF8.GetString(stream.ToArray());
