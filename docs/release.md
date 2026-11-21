@@ -1,4 +1,4 @@
-# 发布说明（0.3.0-beta）
+# 发布说明（0.3.1-beta）
 
 ## 版本与产物
 
@@ -6,7 +6,7 @@
 | --- | --- |
 | 模组 id | `sts2-roaring-earring` |
 | 显示名 | 自动出牌 / 狂吼耳环 |
-| 版本 | `0.3.0-beta` |
+| 版本 | `0.3.1-beta` |
 | 作者 | kewu |
 | 最低游戏版本 | `0.113.1` |
 | 发布形态 | 仅 DLL（`has_pck: false`、`has_dll: true`） |
@@ -128,9 +128,11 @@ sts2-roaring-earring/
 
 ## 已知边界
 
-- 遗物**不进任何遗物池** ⇒ 不进遗物图鉴；只能靠 `start_with_relic` 或瓦库事件获得。
+- 遗物只登记在 `EventRelicPool`（纯登记表）⇒ 图鉴「远古 → 瓦库」可见，但**不进随机遗物奖励**（宝箱/精英/商店）；
+  要拿到它靠 `start_with_relic`、瓦库事件或控制台 `relic ROARING_EARRING`。
 - `start_with_relic` 开启时每个玩家开局各拿一个；同一玩家不会拿第二个；读档不补发。
-- 自动结束回合触发后不可反悔（`canBackOut: false`）。
+- 自动结束回合用 `canBackOut: true`（`src/Models/RoaringEarring.cs`）：结束后按钮变成「取消结束回合」，
+  点它发出联网的 `UndoEndPlayerTurnAction` 把回合要回来；单人对局全员就绪会立刻切边，看不到这个状态。
 - `max_cards_per_turn` 对原版低语耳环的改动是**全局副作用**：只要补丁生效，
   本局任何持有低语耳环的人都按 `max(13, 本值)` 跑。
 - 客户端的配置自愈每层最多一次、每局封顶 5 次；用满后本局沿用本机值。

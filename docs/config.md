@@ -58,8 +58,11 @@
   不是配置键；配置键只决定这个点击入口是否可用。老存档没有这个字段，读到的是 C# 初始值 `true`（开）。
 - 关闭后**从下一个回合起**生效：能量读取用的是回合起点快照，当前回合已经开始的自动出牌循环会跑完
   （`src/Models/RoaringEarring.cs` 的 `AutoPlayActiveThisTurn()`）。
-- `auto_end_turn` 的结束调用是 `canBackOut: false`，触发后不可反悔；
-  战斗结束/正在结束、回合已切换、玩家已准备结束回合这几种情况**不会**触发它。
+- `auto_end_turn` 的结束调用是 `canBackOut: true`：`CombatManager.SetReadyToEndTurn` 只在 `canBackOut` 为假时
+  才把玩家记进 `PlayersThatCannotUnEndTurn`（`CombatManager.cs:973-976`），而 `NEndTurnButton.AfterPlayerEndedTurn`
+  （`NEndTurnButton.cs:462-469`）只在 `canBackOut` 为真且有别的玩家还没结束时，把按钮改成「取消结束回合」。
+  点它发出的是联网的 `UndoEndPlayerTurnAction`（`NEndTurnButton.cs:593`），所以多人局里撤回也是同步的。
+  战斗结束/正在结束、回合已切换、玩家已准备结束回合这几种情况**不会**触发自动结束。
 
 ## 示例
 

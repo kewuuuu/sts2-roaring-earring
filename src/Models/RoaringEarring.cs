@@ -219,7 +219,12 @@ public sealed class RoaringEarring : RelicModel
 		{
 			return;
 		}
-		PlayerCmd.EndTurn(base.Owner, canBackOut: false);
+		// canBackOut: true keeps the vanilla button usable after we end the turn. CombatManager.SetReadyToEndTurn
+		// only records the player in PlayersThatCannotUnEndTurn when canBackOut is false (CombatManager.cs:973-976),
+		// and NEndTurnButton.AfterPlayerEndedTurn (NEndTurnButton.cs:462-469) only turns the button into
+		// "undo end turn" when canBackOut is true. That press enqueues the networked UndoEndPlayerTurnAction
+		// (NEndTurnButton.cs:593), so backing out stays in sync in multiplayer.
+		PlayerCmd.EndTurn(base.Owner, canBackOut: true);
 	}
 
 	/// <summary>Hand order, reverse hand order, or a random playable card from the combat card-selection RNG.</summary>

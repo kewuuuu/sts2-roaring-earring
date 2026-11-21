@@ -11,6 +11,7 @@
 > 2026-11-21 0.2.1-beta 本地构建、未上传；因手牌显示缺陷整体回退，改发 0.2.2-beta。
 > 2026-11-21 `--update` 升到 0.2.3-beta（4 文件 78080 B 同级，dll 67584 B）：遗物登记进 EventRelicPool，图鉴与控制台可用。
 > 2026-11-21 `--update` 升到 0.3.0-beta（4 文件 84736 B，dll 73728 B）：左键点击遗物切换自动出牌 + 设置项 show_toggle。
+> 2026-11-21 `--update` 升到 0.3.1-beta（4 文件 84736 B，dll 73728 B）：自动结束回合改用 `canBackOut: true`，结束后按钮变成「取消结束回合」可撤回。
 > 之后改版只需升版本号（manifest + 正文两处）→ `tools\pack-workshop.ps1` → `--update 3842516435`。
 
 ## 1. 产物
@@ -22,7 +23,7 @@
 | `dist/workshop/roaring_earring_icon.png` | 遗物小图标（128×128，2380 B），随 dll 内嵌使用，不在工坊内容根目录里也行 |
 | `dist/workshop/roaring_earring_big.png` | 遗物大图（512×512，8254 B），同上 |
 | `workshop/title.txt` | 工坊标题（≤128 字符） |
-| `workshop/description.bbcode` | 工坊正文（≤8000 字符） |
+| `workshop/description.bbcode` | 工坊正文（≤8000 **UTF-8 字节**，不是字符） |
 | `workshop/changelog.txt` | 更新说明（`--create` 不读它） |
 
 内容根目录（`--content` 指向的那个目录）会被整体交给 Steam，所以它下面**只能**有

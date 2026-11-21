@@ -3,7 +3,7 @@
   "name": "自动出牌 / 狂吼耳环",
   "author": "kewu",
   "description": "瓦库的耳环：每回合额外能量，并由瓦库接管你的每一回合，自动替你打出卡牌。",
-  "version": "0.3.0-beta",
+  "version": "0.3.1-beta",
   "has_pck": false,
   "has_dll": true,
   "dependencies": [],

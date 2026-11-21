@@ -1,4 +1,11 @@
 
+## 2026-11-21 0.3.1-beta：自动结束回合保留按钮、可手动撤回
+
+- 用户报告（多人局）：自动结束回合后结束回合按钮变灰消失。
+- 根因：`src/Models/RoaringEarring.cs:222` 原来传 `canBackOut: false`。`CombatManager.SetReadyToEndTurn`（CombatManager.cs:973-976）只在 canBackOut 为假时把玩家记进 `PlayersThatCannotUnEndTurn`；`NEndTurnButton.AfterPlayerEndedTurn`（NEndTurnButton.cs:462-469）只在 canBackOut 为真、且还有别的玩家没结束时，才把按钮设为 Enabled 并把文案换成「取消结束回合」，否则一律 Disabled。
+- 修法：改成 `canBackOut: true`。玩家点「取消结束回合」走原版按钮逻辑（NEndTurnButton.cs:593）发出联网的 `UndoEndPlayerTurnAction`（UndoEndPlayerTurnAction.cs:40 → CombatManager.TryUndoReadyToEndTurn），所以多人撤回也是同步的；单人对局没有别人要等，全员就绪立刻切边，行为不变。
+- 验收：dotnet build 0 警告 0 错误（dll 73728 B，只有常量变化故字节数不变）；ilspycmd 反编译确认产物里是 `PlayerCmd.EndTurn(((RelicModel)this).Owner, true, (Func<Task>)null)`；装进 mods 后无头启动 exit=0，日志 `initialized; … auto_end_turn=True`、模组列表 (0.3.1-beta)、无指向本模组的 ERROR。
+- 发布：正文压到 7970 UTF-8 字节后 `--update 3842516435` 成功（file_size 84736）。另修 docs/workshop.md 把「≤8000 字符」改成「≤8000 UTF-8 字节」。
 ## 2026-11-21 0.3.0-beta：点击遗物切换自动出牌
 
 - 模型加 `[SavedProperty] public bool AutoPlayEnabled`（默认 true，老存档缺字段读初始值）；回合起点按 `(PlayerCombatState 引用, TurnNumber)` 懒快照，`ModifyMaxEnergy` 与 `AfterAutoPrePlayPhaseEnteredLate` 都读同一快照 ⇒ 点击只影响下一回合。

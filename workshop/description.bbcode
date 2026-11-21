@@ -1,5 +1,5 @@
 [h1]自动出牌 / 狂吼耳环[/h1]
-[i]模组版本 0.3.0-beta · 作者 kewu · 适用游戏版本 0.113.1 · 单人 / 联机[/i]
+[i]模组版本 0.3.1-beta · 作者 kewu · 适用游戏版本 0.113.1 · 单人 / 联机[/i]
 
 [h2]这是什么[/h2]
 一个先古遗物。拿到它以后，每个回合开始多给能量，然后[b]瓦库接管你的回合[/b]，把能打的牌一张张打出去。牌组和路线还是你自己选，回合归瓦库。
@@ -28,7 +28,7 @@
 [tr][td]max_cards_per_turn[/td][td]每回合自动出牌上限[/td][td]50[/td][td]1 – 100[/td][/tr]
 [tr][td]play_delay_ms[/td][td]两张自动打出的牌之间额外停顿（毫秒），0 = 不停顿[/td][td]0[/td][td]0 – 600[/td][/tr]
 [tr][td]play_order[/td][td]出牌顺序：从左往右 / 从右往左 / 随机[/td][td]left_to_right[/td][td]left_to_right、right_to_left、random[/td][/tr]
-[tr][td]auto_end_turn[/td][td]打满上限或没牌可打时自动结束回合（不可反悔）[/td][td]false[/td][td]true / false[/td][/tr]
+[tr][td]auto_end_turn[/td][td]打满上限或没牌可打时自动结束回合（可撤回）[/td][td]false[/td][td]true / false[/td][/tr]
 [tr][td]start_with_relic[/td][td]开局直接获得狂吼耳环[/td][td]true[/td][td]true / false[/td][/tr]
 [tr][td]show_toggle[/td][td]允许左键点击遗物切换自动出牌；false 时点击无效、遗物始终按「开」工作[/td][td]true[/td][td]true / false[/td][/tr]
 [/table]
@@ -68,13 +68,13 @@
 [list]
 [*]图鉴归属是「远古 → 瓦库」，但瓦库事件候选池仍是 3 + 本模组 1 个，两者不是同一条链路。
 [*]不进随机遗物奖励（宝箱/精英/商店），这是设计如此，不是 bug。
-[*]自动结束回合一旦触发不可反悔，不能把回合要回来。
-[*]以下只做过源码核对，[b]未实机验证[/b]：真实联机收发与消息 id、配置文件首次写盘、RitsuLib 设置页观感、跨版本线格式、本次新增的点击切换与其广播时序。
+[*]自动结束回合后按钮变成「取消结束回合」，可以点它撤回。
+[*]以下只做过源码核对，[b]未实机验证[/b]：真实联机收发与消息 id、配置文件首次写盘、RitsuLib 设置页观感、跨版本线格式、点击切换与广播时序。
 [/list]
 
 [hr]
 [h1]English[/h1]
-[i]Mod version 0.3.0-beta · by kewu · for Slay the Spire 2 0.113.1[/i]
+[i]Mod version 0.3.1-beta · by kewu · for Slay the Spire 2 0.113.1[/i]
 
 [h2]What it does[/h2]
 An Ancient relic. Every turn you gain extra energy, and Vakuu takes over your turn, playing your playable cards one after another in your chosen order. You still build the deck and choose the path; the turns belong to Vakuu.
