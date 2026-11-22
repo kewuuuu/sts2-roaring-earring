@@ -1,4 +1,12 @@
 
+## 2026-11-22 0.4.0-beta：切换改走行动队列（修掉线）+ 状态指示
+
+- 用户报告（三人联机）：战斗中切换自动出牌就有人掉线，每次掉的人还不固定；同时要求「显示当前是否会自动出牌」。
+- 根因：`AutoPlayEnabled` 是 `[SavedProperty]`，参与战斗校验和（`SerializableRelic.cs:12-14` → `NetFullCombatState.FromRun` `:186`/`:486-488` → `ChecksumTracker.cs:159-190`）；不一致时房主 `DisconnectClient(senderId, NetError.StateDivergence)`（`ChecksumTracker.cs:202-213`、`:150-153`）。旧实现 `src/Net/RoaringToggleMessage.cs` 是客户端先改、房主后改，中间任一 checksum 都可能采样到两端不同值 ⇒ 谁落后谁被踢。
+- 修法：改成 `GameActionType.Any` 的 `ToggleAutoPlayAction`（新增 `src/GameActions/ToggleAutoPlayAction.cs`），点击走 `RunManager.Instance.ActionQueueSynchronizer.RequestEnqueue`（client `ActionQueueSynchronizer.cs:171-179` → host `:319-328`/`:251-264` → client `:330-339`），写入只在 `ExecuteAction` 内发生 ⇒ 两端在同一队列位置之前/之后同值。`Any` 不被回合结束取消（`ActionQueueSet.cs:135`、`:364` 显式排除），战斗内外都生效。删除 221 行的旧消息类与 `RoaringToggleSync`。
+- 状态指示：`RefreshIndicator()` 同时写描述里的 `{AutoPlay}`（`StringVar`）与 `RelicModel.Status`（`Active` 脉冲 / `Disabled` 灰化，`NRelicInventoryHolder.cs:242-265`）；刷新点=setter、`ModifyMaxEnergy`、`OnRunStarted`、`OnHostConfigAdopted`。
+- 事故记录：派工时 `todo_write` 报错（同时两个 in_progress）但同一批 `Promise.all` 里的 subagent 已经发出，于是**同一份任务书并发跑了两个子代理**（95c8d77a、2c030a82），两边各写了一部分实现并互相观察到「另一个写者」。最终磁盘内容经我逐行复核一致、可编译，但教训是：有副作用的调用不要和会失败的调用并列在同一个 Promise.all 里。
+- 验收：dotnet build 0 警告 0 错误；dist dll 72704 B；dll UTF-8 有 `ToggleAutoPlayAction`/`NetToggleAutoPlayAction`、无 `RoaringToggleMessage`/`RoaringToggleSync`，UTF-16LE 有 `{AutoPlay}` 与中英两种状态文案；`grep -rn 'RoaringToggleSync\|RoaringToggleMessage' src/` exit=1。
 ## 2026-11-21 0.3.1-beta：自动结束回合保留按钮、可手动撤回
 
 - 用户报告（多人局）：自动结束回合后结束回合按钮变灰消失。

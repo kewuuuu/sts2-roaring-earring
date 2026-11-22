@@ -89,8 +89,6 @@ public static class RoaringEarringMod
 			RoaringRuntimeConfig.ClearOverride();
 			RoaringRuntimeConfig.EndRun();
 			RoaringConfigSync.AttachForRun(state);
-			// Same lifecycle as the config sync: one handler per net service, re-registered at the next run start.
-			RoaringToggleSync.AttachForRun(state);
 			if (!RoaringRuntimeConfig.IsMultiplayerClient)
 			{
 				// Singleplayer and a host both own the values: the file as it is right now is this run's config.
@@ -101,6 +99,9 @@ public static class RoaringEarringMod
 		{
 			Log.Error("[sts2-roaring-earring] config sync failed at run start: " + exception);
 		}
+		// A save load restores AutoPlayEnabled before anything in combat reads it, and the relic bar decides its
+		// white/grey look the moment it binds the model (NRelicInventoryHolder.cs:210-227, :242-265).
+		RefreshRelicIndicators(state);
 		try
 		{
 			if (RoaringRuntimeConfig.IsMultiplayerClient)
@@ -129,6 +130,8 @@ public static class RoaringEarringMod
 	{
 		try
 		{
+			// show_toggle is the host's value only from here on, so the indicator is decided again on this path too.
+			RefreshRelicIndicators(state);
 			if (!RoaringRuntimeConfig.Effective.StartWithRelic)
 			{
 				return;
@@ -154,6 +157,33 @@ public static class RoaringEarringMod
 		catch (Exception exception)
 		{
 			Log.Error("[sts2-roaring-earring] re-requesting the host config failed: " + exception);
+		}
+	}
+
+	/// <summary>
+	/// The relic bar reads <see cref="RelicModel.Status"/> as soon as it binds the model, and a save restores
+	/// AutoPlayEnabled before any combat hook reads it, so both the run-start and the host-config-adoption path settle
+	/// the indicator here rather than waiting for the first energy read inside combat.
+	/// </summary>
+	private static void RefreshRelicIndicators(RunState state)
+	{
+		try
+		{
+			foreach (Player player in state.Players)
+			{
+				foreach (RelicModel relic in player.Relics)
+				{
+					if (relic is RoaringEarring earring)
+					{
+						earring.RefreshIndicator();
+					}
+				}
+			}
+		}
+		catch (Exception exception)
+		{
+			// Display only: a cosmetic refresh must never fail a run start or a config adoption.
+			Log.Warn("[sts2-roaring-earring] refreshing the auto-play indicators failed: " + exception);
 		}
 	}
 

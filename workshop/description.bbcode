@@ -1,5 +1,5 @@
 [h1]自动出牌 / 狂吼耳环[/h1]
-[i]模组版本 0.3.1-beta · 作者 kewu · 适用游戏版本 0.113.1 · 单人 / 联机[/i]
+[i]模组版本 0.4.0-beta · 作者 kewu · 适用游戏版本 0.113.1 · 单人 / 联机[/i]
 
 [h2]这是什么[/h2]
 一个先古遗物。拿到它以后，每个回合开始多给能量，然后[b]瓦库接管你的回合[/b]，把能打的牌一张张打出去。牌组和路线还是你自己选，回合归瓦库。
@@ -17,7 +17,8 @@
 [*]瓦库接管你的每个回合：从当前可打出的牌里按设定顺序依次打出，默认每回合最多 50 张。
 [*]打满上限或没牌可打时停下，把回合交还给你——除非你打开了自动结束回合。
 [*]出牌目标自动选择：敌人、随机队友或自己，按卡牌本身的要求来。
-[*][b]左键点击切换[/b]：在自己遗物栏里左键点一下狂吼耳环即关闭自动出牌，再点一下开回来；关闭后不再给每回合能量、也不再接管回合，[b]从下一回合起生效[/b]（已开始的回合会打完）。点别人的遗物、悬停、右键都无效。开关随存档保存，老存档读作「开」。联机以房主为准：客户端只发请求，房主应用后广播。
+[*][b]左键点击切换[/b]：在自己遗物栏里左键点一下狂吼耳环即关闭自动出牌，再点一下开回来；关闭后不再给每回合能量、也不再接管回合，[b]从下一回合起生效[/b]（已开始的回合会打完）。开关随存档保存，老存档读作「开」。联机时切换走原版行动队列：客户端发起请求、房主确认后广播同一个动作，两端在同一队列位置生效。
+[*][b]状态一眼可见[/b]：开着时图标带脉冲高光，关闭后图标变灰；悬停描述末尾直接写「当前：自动出牌：开 / 关」。
 [/list]
 
 [h2]设置[/h2]
@@ -66,15 +67,14 @@
 
 [h2]已知限制，以及尚未实机验证的部分[/h2]
 [list]
-[*]图鉴归属是「远古 → 瓦库」，但瓦库事件候选池仍是 3 + 本模组 1 个，两者不是同一条链路。
-[*]不进随机遗物奖励（宝箱/精英/商店），这是设计如此，不是 bug。
+[*]图鉴归属「远古 → 瓦库」，事件候选池仍是 3 + 本模组 1 个；不进随机遗物奖励。
 [*]自动结束回合后按钮变成「取消结束回合」，可以点它撤回。
-[*]以下只做过源码核对，[b]未实机验证[/b]：真实联机收发与消息 id、配置文件首次写盘、RitsuLib 设置页观感、跨版本线格式、点击切换与广播时序。
+[*]部分只做过源码核对，[b]未实机验证[/b]：联机收发、配置写盘、RitsuLib 设置页观感、切换时序。
 [/list]
 
 [hr]
 [h1]English[/h1]
-[i]Mod version 0.3.1-beta · by kewu · for Slay the Spire 2 0.113.1[/i]
+[i]Mod version 0.4.0-beta · by kewu · for Slay the Spire 2 0.113.1[/i]
 
 [h2]What it does[/h2]
 An Ancient relic. Every turn you gain extra energy, and Vakuu takes over your turn, playing your playable cards one after another in your chosen order. You still build the deck and choose the path; the turns belong to Vakuu.
@@ -83,7 +83,8 @@ An Ancient relic. Every turn you gain extra energy, and Vakuu takes over your tu
 [list]
 [*][b]Start with it[/b]: on by default ([code]start_with_relic[/code]); every player receives one at run start.
 [*][b]Vakuu's Ancient event[/b]: the earring is the 4th candidate in Vakuu's initial pool (3 vanilla options plus this one, roughly 1 in 4).
-[*][b]Click to toggle[/b]: left-click the earring in your own relic bar to turn auto-play off, and again to turn it back on. While off it grants no energy and no longer takes over, from the next turn (a turn in progress finishes). Other relics, hover and right-click do nothing. The switch is saved; an older save reads it as on. In multiplayer the host decides: a client asks, the host applies and broadcasts.
+[*][b]Click to toggle[/b]: left-click the earring in your own relic bar; off means no energy and no takeover, from the next turn. The switch is saved (older saves read it as on) and, in multiplayer, travels through the game's own action queue so both peers apply it at the same queue position.
+[*][b]State at a glance[/b]: while auto-play is on the icon pulses, while it is off the icon is greyed out, and the tooltip ends with "Now: auto-play on / off".
 [/list]
 
 [h2]Settings[/h2]
@@ -100,12 +101,12 @@ Edit [code]<game dir>/mods/config/sts2-roaring-earring.cfg[/code]; changes apply
 [/table]
 
 [h2]Multiplayer[/h2]
-The host's values win: clients adopt and freeze them and never write their own config. Each player owns their relic and energy. Vanilla Whispering Earring can be held alongside; its 13-card cap becomes max(13, max_cards_per_turn).
+The host's values win: clients adopt and freeze them and never write their own config. Vanilla Whispering Earring can be held alongside; its 13-card cap becomes max(13, max_cards_per_turn).
 
 [h2]Notes[/h2]
 [list]
 [*]No dependencies. RitsuLib is optional and only adds a settings page.
-[*]Source-verified only: real multiplayer delivery, config writes, the RitsuLib page and cross-version wire compatibility are NOT tested in game.
+[*]Source-verified only: real multiplayer delivery, config writes and the RitsuLib page are NOT tested in game.
 [*]Feedback and bug reports: use the comments below.
 [/list]
 

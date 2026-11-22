@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -9,6 +10,7 @@ using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Entities.Relics;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
+using MegaCrit.Sts2.Core.Localization;
 using MegaCrit.Sts2.Core.Localization.DynamicVars;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Models.Relics;
@@ -46,14 +48,32 @@ public sealed class RoaringEarring : RelicModel
 	}
 
 	/// <summary>
-	/// Display-only: the relic's description counter is the only reader left (RelicModel.cs:93-111), because
+	/// Display-only: the relic's description is the only reader left (RelicModel.cs:93-111), because
 	/// <see cref="ModifyMaxEnergy"/> now reads the run's config directly. A canonical model is built once at
-	/// startup, so this value can never follow a settings change mid-session.
+	/// startup, so the energy value can never follow a settings change mid-session; the {AutoPlay} text, in contrast,
+	/// is rewritten by <see cref="RefreshIndicator"/> on every switch.
 	/// </summary>
-	protected override IEnumerable<DynamicVar> CanonicalVars => new DynamicVar[1]
+	protected override IEnumerable<DynamicVar> CanonicalVars => new DynamicVar[2]
 	{
 		new EnergyVar(RoaringRuntimeConfig.ForThisRun.EnergyPerTurn),
+		// Fresh per clone and seeded in the locale this machine runs: the description is rebuilt on every hover
+		// (RelicModel.cs:93-111, StringVar.ToString is what SmartFormat substitutes for {AutoPlay}).
+		new StringVar(AutoPlayVar, AutoPlayText(true)),
 	};
+
+	/// <summary>Name of the display var behind the description's {AutoPlay} placeholder (StringVar.cs:3-16).</summary>
+	private const string AutoPlayVar = "AutoPlay";
+
+	// Two values for one placeholder. The description itself is picked per locale when it is injected
+	// (RoaringLoc.RelicEntries), so the value has to be picked the same way or one half of the sentence would
+	// arrive in the other language.
+	internal const string AutoPlayOnChinese = "自动出牌：开";
+
+	internal const string AutoPlayOffChinese = "自动出牌：关";
+
+	internal const string AutoPlayOnEnglish = "auto-play on";
+
+	internal const string AutoPlayOffEnglish = "auto-play off";
 
 	/// <summary>Default of <see cref="AutoPlayEnabled"/>; an old save has no such property and reads as on.</summary>
 	public const bool DefaultAutoPlayEnabled = true;
@@ -65,7 +85,8 @@ public sealed class RoaringEarring : RelicModel
 	/// save: [SavedProperty] registers it in the model's property table (ModelIdSerializationCache.cs:157-181) and
 	/// restores it on load (RelicModel.cs:588-608). A save written before 0.3.0-beta has no value for it, so
 	/// SavedProperties.Fill leaves the field at its initializer (SavedProperties.cs:273-283): old saves read as on.
-	/// Only the authority writes it (singleplayer, or the host); a client applies what the host sends.
+	/// Every peer writes it, but only from the queued action (ToggleAutoPlayAction): the write lands at the same
+	/// action-queue position everywhere, so no checksum can catch two peers on different values.
 	/// </summary>
 	[SavedProperty]
 	public bool AutoPlayEnabled
@@ -78,6 +99,7 @@ public sealed class RoaringEarring : RelicModel
 		{
 			AssertMutable();
 			_autoPlayEnabled = value;
+			RefreshIndicator();
 		}
 	}
 
@@ -92,6 +114,56 @@ public sealed class RoaringEarring : RelicModel
 	/// otherwise whatever the owner last chose.
 	/// </summary>
 	private bool EffectiveAutoPlayEnabled => !RoaringRuntimeConfig.ForThisRun.ShowToggle || _autoPlayEnabled;
+
+	private static bool IsChineseLocale()
+	{
+		try
+		{
+			LocManager? manager = LocManager.Instance;
+			return manager == null || manager.CultureInfo.Name.StartsWith("zh", StringComparison.OrdinalIgnoreCase);
+		}
+		catch (Exception)
+		{
+			// Nothing readable this early: RoaringLoc falls back to the Chinese table too.
+			return true;
+		}
+	}
+
+	private static string AutoPlayText(bool enabled)
+	{
+		if (IsChineseLocale())
+		{
+			return enabled ? AutoPlayOnChinese : AutoPlayOffChinese;
+		}
+		return enabled ? AutoPlayOnEnglish : AutoPlayOffEnglish;
+	}
+
+	/// <summary>
+	/// Puts the current switch where the player can see it: the {AutoPlay} text of the description, and the icon's
+	/// status (Active pulses, Disabled greys out — RelicModel.UpdateTexture:505-540, reached through
+	/// NRelicInventoryHolder.OnStatusChanged:349-352). Callers include a canonical model's hover and a save load, so
+	/// the mutability guard comes first and nothing in here may throw.
+	/// </summary>
+	internal void RefreshIndicator()
+	{
+		if (!base.IsMutable)
+		{
+			return;
+		}
+		try
+		{
+			bool enabled = EffectiveAutoPlayEnabled;
+			if (DynamicVars.TryGetValue(AutoPlayVar, out DynamicVar? variable) && variable is StringVar text)
+			{
+				text.StringValue = AutoPlayText(enabled);
+			}
+			Status = enabled ? RelicStatus.Active : RelicStatus.Disabled;
+		}
+		catch (Exception)
+		{
+			// Cosmetic only: an indicator failure must never escape into a hook, a click or a save load.
+		}
+	}
 
 	/// <summary>
 	/// Whether auto-play is in force for the turn currently being fought. The value is snapshotted at the turn
@@ -132,6 +204,9 @@ public sealed class RoaringEarring : RelicModel
 		{
 			return amount;
 		}
+		// The turn's first energy read happens before any other hook of ours (see the snapshot note above), which also
+		// makes this the point where the icon and the description catch up after a load or a mid-turn switch.
+		RefreshIndicator();
 		if (!AutoPlayActiveThisTurn())
 		{
 			// Switched off, or clicking is off for the whole run: no energy either.

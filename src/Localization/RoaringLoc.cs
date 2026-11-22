@@ -58,8 +58,8 @@ public static class RoaringLoc
 		List<KeyValuePair<string, string>> entries = new List<KeyValuePair<string, string>>();
 		Add(entries, "title", chinese ? "狂吼耳环" : "Roaring Earring");
 		Add(entries, "description", chinese
-			? "每回合开始时获得额外能量。瓦库会接管你的所有回合，自动替你打出卡牌。左键点击遗物可切换自动出牌：关闭后不再获得每回合能量，也不再接管回合，下一回合生效。"
-			: "Gain extra Energy each turn. Vakuu takes over every turn and plays your cards for you. Left-click the relic to toggle auto-play: when it is off you gain no extra Energy and Vakuu no longer takes over, starting from the next turn.");
+			? "每回合开始时获得额外能量。瓦库会接管你的所有回合，自动替你打出卡牌。左键点击遗物可切换自动出牌：关闭后不再获得每回合能量，也不再接管回合，下一回合生效。当前：{AutoPlay}。"
+			: "Gain extra Energy each turn. Vakuu takes over every turn and plays your cards for you. Left-click the relic to toggle auto-play: when it is off you gain no extra Energy and Vakuu no longer takes over, starting from the next turn. Now: {AutoPlay}.");
 		Add(entries, "flavor", chinese
 			? "瓦库的低语从不需要你亲自回应。"
 			: "Vakuu's whisper never needed your reply.");

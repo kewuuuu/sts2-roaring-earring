@@ -3,10 +3,13 @@ using HarmonyLib;
 using MegaCrit.Sts2.Core.Context;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Nodes.GodotExtensions;
+using MegaCrit.Sts2.Core.Entities.Players;
+using MegaCrit.Sts2.Core.Logging;
 using MegaCrit.Sts2.Core.Nodes.Relics;
+using MegaCrit.Sts2.Core.Runs;
 using Sts2RoaringEarring.Config;
+using Sts2RoaringEarring.GameActions;
 using Sts2RoaringEarring.Models;
-using Sts2RoaringEarring.Net;
 
 namespace Sts2RoaringEarring.Patches;
 
@@ -23,6 +26,12 @@ namespace Sts2RoaringEarring.Patches;
 /// runs on that click (NRelicInventory.cs:270-273), and LocalContext.IsMine drops other players' relics
 /// (LocalContext.cs:148-155). Hover and the right button never reach OnRelease (NClickableControl.cs:390-410).
 /// The vanilla inspect screen still opens: this is additive, and the click stays the same gesture.
+/// The switch must not travel as a custom message: AutoPlayEnabled is a [SavedProperty] and both peers checksum it
+/// (SerializableRelic.Props -> NetFullCombatState -> ChecksumTracker), so a value applied on one peer before the
+/// other would diverge for at least one checksum tick, and the host answers that with
+/// DisconnectClient(senderId, NetError.StateDivergence) (ChecksumTracker.cs:202-213). Enqueuing a GameAction instead
+/// makes every peer apply the same serialized action at the same queue position (ActionQueueSynchronizer.cs:161-185,
+/// :251-264, :319-345).
 /// </summary>
 [HarmonyPatch(typeof(NClickableControl), "OnRelease")]
 internal static class RelicToggleClickPatch
@@ -56,11 +65,24 @@ internal static class RelicToggleClickPatch
 			{
 				return;
 			}
-			RoaringToggleSync.ToggleFromLocalClick(earring);
+			Player? player = earring.Owner;
+			if (player == null)
+			{
+				return;
+			}
+			if (!RunManager.Instance.IsInProgress)
+			{
+				// Nothing to enqueue into while a run is starting or tearing down.
+				return;
+			}
+			// Host and singleplayer enqueue immediately; a client sends RequestEnqueueActionMessage and only enqueues
+			// when the host's ActionEnqueuedMessage arrives, so the two peers never apply the flag at different points.
+			RunManager.Instance.ActionQueueSynchronizer.RequestEnqueue(new ToggleAutoPlayAction(player, !earring.AutoPlayEnabled));
 		}
-		catch (Exception)
+		catch (Exception exception)
 		{
 			// A Harmony postfix must never throw back into Godot's input loop.
+			Log.Error("[sts2-roaring-earring] toggling auto-play from the relic click failed: " + exception);
 		}
 	}
 }

@@ -1,4 +1,22 @@
-# 发布说明（0.3.1-beta）
+# 发布说明（0.4.0-beta）
+
+## 0.4.0-beta 变更（相对 0.3.1-beta）
+
+- **切换不再掉线**：`AutoPlayEnabled` 是 `[SavedProperty]`，两端都会把它算进战斗校验和
+  （`SerializableRelic.Props` → `NetFullCombatState.FromRun` `NetFullCombatState.cs:186`/`:486-488` →
+  `ChecksumTracker.ObtainAndTrackChecksum` `ChecksumTracker.cs:159-190`）；不一致时房主直接
+  `DisconnectClient(senderId, NetError.StateDivergence)`（`:202-213`、`:150-153`）——谁落后谁被踢，
+  所以之前「每次掉一个、掉的还不固定」。旧的 `src/Net/RoaringToggleMessage.cs`（221 行）是客户端先改、房主后改，
+  中间任何一次 checksum 都可能采样到两端不同的值。
+  现在改成 `GameActionType.Any` 的 `ToggleAutoPlayAction`（`src/GameActions/ToggleAutoPlayAction.cs`），
+  走 `RunManager.Instance.ActionQueueSynchronizer.RequestEnqueue`：客户端只发请求（`ActionQueueSynchronizer.cs:171-179`），
+  房主重建并广播（`:319-328` → `:251-264`），客户端按同一 `playerId` 重建入队（`:330-339`），写入只发生在 `ExecuteAction`，
+  所有端在同一个队列位置之前/之后看到同一个值。`Any` 的意义是「战斗内外都能执行、回合结束不取消」
+  （`GameActionType.cs:23-26`；`ActionQueueSet.cs:135`、`:364` 明确把 `Any` 排除在「回合结束取消」之外）。
+- **状态指示**：`RefreshIndicator()` 写两处 —— 描述里的 `{AutoPlay}`（`StringVar`，`RelicModel.cs:93-111` 每次悬停重建）
+  和 `RelicModel.Status`（`Active` = 脉冲、`Disabled` = 图标 `#808080`，`NRelicInventoryHolder.cs:242-265`、`RelicModel.cs:505-540`）。
+  刷新点：`AutoPlayEnabled` setter、`ModifyMaxEnergy`（每回合第一次读能量）、`OnRunStarted` 与 `OnHostConfigAdopted`（读档/采纳房主配置后）。
+- **删除** `src/Net/RoaringToggleMessage.cs` 与 `RoaringToggleSync`：这类「本地先改、再广播」的模组消息不能用来改参与校验和的状态。
 
 ## 版本与产物
 
@@ -6,7 +24,7 @@
 | --- | --- |
 | 模组 id | `sts2-roaring-earring` |
 | 显示名 | 自动出牌 / 狂吼耳环 |
-| 版本 | `0.3.1-beta` |
+| 版本 | `0.4.0-beta` |
 | 作者 | kewu |
 | 最低游戏版本 | `0.113.1` |
 | 发布形态 | 仅 DLL（`has_pck: false`、`has_dll: true`） |
@@ -20,7 +38,8 @@
 - 先古遗物「狂吼耳环」（`ROARING_EARRING`）：每回合额外能量，并由瓦库接管每个回合自动出牌。
 - 瓦库事件初始池的第 4 个候选（原版 3 个 + 本模组 1 个，约 1/4）。
 - 7 项参数（`play_delay_ms` 自 0.2.0-beta 起、`show_toggle` 自 0.3.0-beta 起）、cfg 读写、开局快照（局内改设置不影响本局）。
-- 左键点击遗物切换自动出牌（0.3.0-beta）：开关随存档保存，联机由房主权威广播。
+- 左键点击遗物切换自动出牌（0.3.0-beta）：开关随存档保存；切换自 0.4.0-beta 起走原版行动队列，不再掉线。
+- 状态指示（0.4.0-beta）：开着时图标脉冲高光、关闭后灰化，悬停描述末尾写「当前：自动出牌：开 / 关」。
 - 联机参数同步：房主广播、客户端采纳并冻结、客户端不写本机文件。
 - 遗物图标/大图内嵌在 dll 里；解码失败只留一条日志并保持原版图标，不会让模组加载失败。
   三个 getter 改为 prefix 覆盖，拿到图就跳过原版 `res://` 查找，因此 `Missing sprite 'roaring_earring'` 警告不再出现。
